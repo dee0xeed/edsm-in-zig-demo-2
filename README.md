@@ -9,7 +9,7 @@ The server consists of 4 kinds of state machines:
 ## LISTENER
 
 Listener is responsible for accepting incoming connections and also for managing
-resources, assotiated with connected client (memory and file descriptor). Its 2 states:
+resources, assotiated with connected client (memory and file descriptor). Has 2 states:
 
 * INIT
 * WORK
