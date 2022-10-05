@@ -48,6 +48,19 @@ These 'tags' are used in the names of state machines 'methods', for example:
     }
 ```
 
+### Enter/Leave functions
+
+Each state can have enter/leave functions, which can be used to perform some action
+in addition to 'regular' actions. For example, `RX` machine stops timeout timer
+when leaving `WORK` state:
+
+```zig
+    fn workLeave(me: *StageMachine) void {
+        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+        pd.tm0.disable(&me.md.eq) catch unreachable;
+    }
+```
+
 ## Server architecture
 
 The server consists of 4 kinds of state machines:
@@ -64,17 +77,46 @@ Listener is responsible for accepting incoming connections and also for managing
 resources, associated with connected client (memory and file descriptor). Has 2 states:
 
 * INIT
+ * enter: prepare channels
+ * `M0` => goto `WORK` state
+ * leave: nothing
 * WORK
+ * enter: enable channels
+ * `D0` => accept connection, take WORKER from the pool, send it `M1` with ptr to client as payload
+ * `M0` => close connection, free memory
+ * `S0` (SIGINT) => stop event loop
+ * `S1` (SIGTERM) => stop event loop
+ * leave: say goodbye
 
 ### WORKER
 
 Worker is a machine which implements message flow pattern. Has 5 states:
 
 * INIT
+ * enter: 
+ * `M0` => goto `IDLE` state
+ * leave: 
 * IDLE
+ * enter: 
+ * `M1` => store information about client
+ * `M0` => goto `RECV` state
+ * leave: 
 * RECV
+ * enter: 
+ * `M0` => goto `SEND` state
+ * `M1` => send `M0` to self
+ * `M2` => goto `FAIL` state
+ * leave: 
 * SEND
+ * enter: 
+ * `M0` => goto `RECV` state
+ * `M1` => send `M0` to self
+ * `M2` => goto `FAIL` state
+ * leave: 
 * FAIL
+ * enter: 
+ * `M0` => goto `IDLE` state
+ * leave: 
 
 ### RX
 
