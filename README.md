@@ -133,3 +133,54 @@ Tx is a machine which knows how to write data. Also has 3 states:
 * INIT
 * IDLE
 * WORK
+
+## Examples of workflow
+
+* client connected
+
+```
+LISTENER-1 @ WORK got 'D0' from OS
+WORKER-4 @ IDLE got 'M1' from LISTENER-1
+WORKER-4 @ IDLE got 'M0' from SELF
+RX-4 @ IDLE got 'M1' from WORKER-4
+RX-4 @ IDLE got 'M0' from SELF
+```
+
+* client suddenly disconnected
+
+```
+RX-4 @ IDLE got 'M0' from SELF
+RX-4 @ WORK got 'D2' from OS
+RX-4 @ WORK got 'M0' from SELF
+WORKER-4 @ RECV got 'M2' from RX-4
+WORKER-4 @ FAIL got 'M0' from SELF
+LISTENER-1 @ WORK got 'M0' from WORKER-4
+```
+
+* request-reply
+
+```
+RX-4 @ IDLE got 'M0' from SELF
+RX-4 @ WORK got 'D0' from OS
+<<< 4 bytes: { 49, 50, 51, 10 }
+RX-4 @ WORK got 'M0' from SELF
+WORKER-4 @ RECV got 'M1' from RX-4
+WORKER-4 @ RECV got 'M0' from SELF
+TX-4 @ IDLE got 'M1' from WORKER-4
+TX-4 @ IDLE got 'M0' from SELF
+TX-4 @ WORK got 'D1' from OS
+TX-4 @ WORK got 'M0' from SELF
+WORKER-4 @ SEND got 'M1' from TX-4
+WORKER-4 @ SEND got 'M0' from SELF
+```
+
+* request timeout
+
+```
+RX-4 @ IDLE got 'M0' from SELF
+RX-4 @ WORK got 'T0' from OS
+RX-4 @ WORK got 'M0' from SELF
+WORKER-4 @ RECV got 'M2' from RX-4
+WORKER-4 @ FAIL got 'M0' from SELF
+LISTENER-1 @ WORK got 'M0' from WORKER-4
+```
