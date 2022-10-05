@@ -1,0 +1,20 @@
+
+SM == "State Machine"
+MD == "Message Dispatcher"
+MQ == "Message Queue"
+EC == "Event Capture"
+OS == "Operating System"
+
+SM SM SM ...
+|     ^^
+|     ||
+|     MD
+ \    ^
+  -> / MQ /
+ /
+|
+ <--- EC (epoll, kqueue)
+       ^
+       | (i/o, timers, signals, fs events etc.)
+       |
+      OS
