@@ -36,7 +36,7 @@ The server consists of 4 kinds of state machines:
 * WORKER (many instances, kept in a pool when idle)
 * RX/TX (many instances, also kept in pools)
 
-This we have 3-level hierarchy here.
+Thus we have 3-level hierarchy here.
 
 ### LISTENER
 
