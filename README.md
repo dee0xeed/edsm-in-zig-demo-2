@@ -3,8 +3,8 @@
 ## Preliminary notes
 
 First of all - this is **NOT** so called hierarchical state machines (nested states and whatnots)
-implementation. It is much more convenient to deal with herarchy of relatively simple
-state machines interacting with each other than with one single huge machine having hierarchy of states.
+implementation. It is much more convenient to deal with hierarchy of relatively simple
+*interacting state machines* rather than with a single huge machine having hierarchy of states.
 
 ### Events
 
@@ -35,6 +35,8 @@ The server consists of 4 kinds of state machines:
 * LISTENER (one instance)
 * WORKER (many instances, kept in a pool when idle)
 * RX/TX (many instances, also kept in pools)
+
+This we have 3-level hierarchy here.
 
 ### LISTENER
 
