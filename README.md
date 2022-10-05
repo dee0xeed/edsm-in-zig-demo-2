@@ -3,8 +3,8 @@
 ## Preliminary notes
 
 First of all - this is **NOT** so called hierarchical state machines (nested states and whatnots)
-implementation. It is much more convenient to deal with hierarchy of relatively simple
-*interacting state machines* rather than with a single huge machine having hierarchy of states.
+implementation. It is much more convenient to deal with *hierarchy of* (relatively simple)
+*interacting state machines* rather than with a single huge machine having *hierarchy of states*.
 
 ### Events
 
