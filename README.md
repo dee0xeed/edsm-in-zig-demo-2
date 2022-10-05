@@ -16,7 +16,7 @@ This is epoll based implementation, so in essence events are:
 
 Upon returning from `epoll_wait()` these events are transformed into messages
 and then delivered to destination state machine. Besides messages triggered
-by 'external world', machines can send messages to each other directly
+by 'external world', there are internal messages - machines can send them to each other directly
 (see `engine/architecture.txt` in the sources).
 
 ### Event sources (channels)
