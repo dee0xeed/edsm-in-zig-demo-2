@@ -14,7 +14,7 @@ This is epoll based implementation, so in essence events are:
 * `EPOLLOUT` (`write()` will not block)
 * `EPOLLERR/EPOLLHUP/EPOLLRDHUP`
 
-Upon returning from `epoll_wait()` these events are transformed to messages
+Upon returning from `epoll_wait()` these events are transformed into messages
 and then delivered to destination state machine. Besides messages triggered
 by 'external world', machines can send messages to each other directly
 (see `engine/architecture.txt` in the sources).
@@ -39,7 +39,7 @@ The server consists of 4 kinds of state machines:
 ### LISTENER
 
 Listener is responsible for accepting incoming connections and also for managing
-resources, assotiated with connected client (memory and file descriptor). Has 2 states:
+resources, associated with connected client (memory and file descriptor). Has 2 states:
 
 * INIT
 * WORK
