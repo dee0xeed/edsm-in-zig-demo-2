@@ -93,30 +93,30 @@ resources, associated with connected client (memory and file descriptor). Has 2 
 Worker is a machine which implements message flow pattern. Has 5 states:
 
 * INIT
-    * enter: 
+    * enter: send `M0` to self
     * `M0` => goto `IDLE` state
-    * leave: 
+    * leave: nothing
 * IDLE
-    * enter: 
+    * enter: put self into the pool
     * `M1` => store information about client
     * `M0` => goto `RECV` state
-    * leave: 
+    * leave: nothing
 * RECV
-    * enter: 
+    * enter: get `RX` machine from pool, send it `M1` with ptr to context
     * `M0` => goto `SEND` state
     * `M1` => send `M0` to self
     * `M2` => goto `FAIL` state
-    * leave: 
+    * leave: nothing
 * SEND
-    * enter: 
+    * enter: get `TX` machine from pool, send it `M1` with ptr to context
     * `M0` => goto `RECV` state
     * `M1` => send `M0` to self
     * `M2` => goto `FAIL` state
-    * leave: 
+    * leave: nothing
 * FAIL
-    * enter: 
+    * enter: send `M0` to self, `M0` to `LISTENER` with ptr to client
     * `M0` => goto `IDLE` state
-    * leave: 
+    * leave: nothing
 
 ### RX
 
