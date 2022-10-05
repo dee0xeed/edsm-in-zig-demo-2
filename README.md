@@ -77,46 +77,46 @@ Listener is responsible for accepting incoming connections and also for managing
 resources, associated with connected client (memory and file descriptor). Has 2 states:
 
 * INIT
- * enter: prepare channels
- * `M0` => goto `WORK` state
- * leave: nothing
+    * enter: prepare channels
+    * `M0` => goto `WORK` state
+    * leave: nothing
 * WORK
- * enter: enable channels
- * `D0` => accept connection, take WORKER from the pool, send it `M1` with ptr to client as payload
- * `M0` => close connection, free memory
- * `S0` (SIGINT) => stop event loop
- * `S1` (SIGTERM) => stop event loop
- * leave: say goodbye
+    * enter: enable channels
+    * `D0` => accept connection, take WORKER from the pool, send it `M1` with ptr to client as payload
+    * `M0` => close connection, free memory
+    * `S0` (SIGINT) => stop event loop
+    * `S1` (SIGTERM) => stop event loop
+    * leave: say goodbye
 
 ### WORKER
 
 Worker is a machine which implements message flow pattern. Has 5 states:
 
 * INIT
- * enter: 
- * `M0` => goto `IDLE` state
- * leave: 
+    * enter: 
+    * `M0` => goto `IDLE` state
+    * leave: 
 * IDLE
- * enter: 
- * `M1` => store information about client
- * `M0` => goto `RECV` state
- * leave: 
+    * enter: 
+    * `M1` => store information about client
+    * `M0` => goto `RECV` state
+    * leave: 
 * RECV
- * enter: 
- * `M0` => goto `SEND` state
- * `M1` => send `M0` to self
- * `M2` => goto `FAIL` state
- * leave: 
+    * enter: 
+    * `M0` => goto `SEND` state
+    * `M1` => send `M0` to self
+    * `M2` => goto `FAIL` state
+    * leave: 
 * SEND
- * enter: 
- * `M0` => goto `RECV` state
- * `M1` => send `M0` to self
- * `M2` => goto `FAIL` state
- * leave: 
+    * enter: 
+    * `M0` => goto `RECV` state
+    * `M1` => send `M0` to self
+    * `M2` => goto `FAIL` state
+    * leave: 
 * FAIL
- * enter: 
- * `M0` => goto `IDLE` state
- * leave: 
+    * enter: 
+    * `M0` => goto `IDLE` state
+    * leave: 
 
 ### RX
 
