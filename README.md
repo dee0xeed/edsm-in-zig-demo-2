@@ -66,7 +66,7 @@ Rx is a machine which knows how to read data. Has 3 states:
 
 ### TX
 
-Rx is a machine which knows how to write data. Also has 3 states:
+Tx is a machine which knows how to write data. Also has 3 states:
 
 * INIT
 * IDLE
