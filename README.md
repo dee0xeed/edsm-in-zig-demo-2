@@ -78,14 +78,14 @@ resources, associated with connected client (memory and file descriptor). Has 2 
 
 * INIT
     * enter: prepare channels
-    * `M0` => goto `WORK` state
+    * `M0`: goto `WORK` state
     * leave: nothing
 * WORK
     * enter: enable channels
-    * `D0` => accept connection, take WORKER from the pool, send it `M1` with ptr to client as payload
-    * `M0` => close connection, free memory
-    * `S0` (SIGINT) => stop event loop
-    * `S1` (SIGTERM) => stop event loop
+    * `D0`: accept connection, take WORKER from the pool, send it `M1` with ptr to client as payload
+    * `M0`: close connection, free memory
+    * `S0` (SIGINT): stop event loop
+    * `S1` (SIGTERM): stop event loop
     * leave: say goodbye
 
 ### WORKER
@@ -94,28 +94,28 @@ Worker is a machine which implements message flow pattern. Has 5 states:
 
 * INIT
     * enter: send `M0` to self
-    * `M0` => goto `IDLE` state
+    * `M0`: goto `IDLE` state
     * leave: nothing
 * IDLE
     * enter: put self into the pool
-    * `M1` => store information about client
-    * `M0` => goto `RECV` state
+    * `M1`: store information about client
+    * `M0`: goto `RECV` state
     * leave: nothing
 * RECV
     * enter: get `RX` machine from pool, send it `M1` with ptr to context
-    * `M0` => goto `SEND` state
-    * `M1` => send `M0` to self
-    * `M2` => goto `FAIL` state
+    * `M0`: goto `SEND` state
+    * `M1`: send `M0` to self
+    * `M2`: goto `FAIL` state
     * leave: nothing
 * SEND
     * enter: get `TX` machine from pool, send it `M1` with ptr to context
-    * `M0` => goto `RECV` state
-    * `M1` => send `M0` to self
-    * `M2` => goto `FAIL` state
+    * `M0`: goto `RECV` state
+    * `M1`: send `M0` to self
+    * `M2`: goto `FAIL` state
     * leave: nothing
 * FAIL
     * enter: send `M0` to self, `M0` to `LISTENER` with ptr to client
-    * `M0` => goto `IDLE` state
+    * `M0`: goto `IDLE` state
     * leave: nothing
 
 ### RX
@@ -123,16 +123,41 @@ Worker is a machine which implements message flow pattern. Has 5 states:
 Rx is a machine which knows how to read data. Has 3 states:
 
 * INIT
+    * enter: init timer and i/o channels, send `M0` to self
+    * `M0`: goto `IDLE` state
+    * leave: nothing
 * IDLE
+    * enter: put self into the pool
+    * `M0`: goto `WORK` state
+    * `M1`: store context given by `WORKER`
+    * leave: nothing
 * WORK
+    * enter: enable i/o and timer
+    * `D0`: read data
+    * `D2`: send `M0` to self, `M2` to `WORKER`
+    * `T0` (timeout): send `M0` to self, `M2` to `WORKER`
+    * `M0`: goto `IDLE` state
+    * leave: stop timer
 
 ### TX
 
 Tx is a machine which knows how to write data. Also has 3 states:
 
 * INIT
+    * enter: init i/o channel
+    * `M0`: goto `IDLE` state
+    * leave: nothing
 * IDLE
+    * enter: put self into the pool
+    * `M0`: goto `WORK` state
+    * `M1`: store context given by `WORKER`
+    * leave: nothing
 * WORK
+    * enter: enable i/o
+    * `D1`: write data
+    * `D2`: send `M0` to self, `M2` to `WORKER`
+    * `M0`: goto `IDLE` state
+    * leave: nothing
 
 ## Examples of workflow
 
@@ -157,7 +182,7 @@ WORKER-4 @ FAIL got 'M0' from SELF
 LISTENER-1 @ WORK got 'M0' from WORKER-4
 ```
 
-* request-reply
+* normal request-reply
 
 ```
 RX-4 @ IDLE got 'M0' from SELF
