@@ -3,7 +3,8 @@
 ## Preliminary notes
 
 First of all - this is **NOT** so called hierarchical state machines (nested states and whatnots)
-implementation.
+implementation. It is much more convenient to deal with herarchy of relatively simple
+state machines interacting with each other than with one single huge machine having hierarchy of states.
 
 ### Events
 
@@ -12,6 +13,11 @@ This is epoll based implementation, so in essence events are:
 * `EPOLLIN` (`read()`/`accept()` will not block)
 * `EPOLLOUT` (`write()` will not block)
 * `EPOLLERR/EPOLLHUP/EPOLLRDHUP`
+
+Upon returning from `epoll_wait()` these events are transformed to messages
+and then delivered to destination state machine. Besides messages triggered
+by 'external world', machines can send messages to each other directly
+(see `engine/architecture.txt` in the sources).
 
 ### Event sources (channels)
 
