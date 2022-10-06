@@ -224,7 +224,16 @@ because `TERMINATOR` is stand-alone machine and it's
 only purpose is catching `SIGTERM` and `SIGINT`.
 
 ### TERMINATOR
+*INIT
+*IDLE
+
 ### WORKER
+* INIT
+* CONN
+* SEND
+* RECV
+* TWIX
+* WAIT
 
 ## Links
 * [Event driven state machine](https://en.wikipedia.org/wiki/Event-driven_finite-state_machine)
