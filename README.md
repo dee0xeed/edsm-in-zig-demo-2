@@ -15,9 +15,9 @@ This is epoll based implementation, so in essence events are:
 * `EPOLLERR/EPOLLHUP/EPOLLRDHUP`
 
 Upon returning from `epoll_wait()` these events are transformed into messages
-and then delivered to destination state machine. Besides messages triggered
-by 'external world', there are internal messages - machines can send them to each other directly
-(see `engine/architecture.txt` in the sources).
+and then delivered to destination state machine (owner of a channel, see below).
+Besides messages triggered by 'external world', there are internal messages - 
+machines can send them to each other directly (see `engine/architecture.txt` in the sources).
 
 ### Event sources (channels)
 
@@ -27,6 +27,8 @@ Event source is anything representable by file descriptor and thus can be used w
 * timers (`EPOLLIN` only)
 * sockets, terminals, serial devices, fifoes etc.
 * file system (via `inotify` facility)
+
+Each event source has an owner (stage machine).
 
 ### Event/messages notation
 
