@@ -224,8 +224,8 @@ because `TERMINATOR` is stand-alone machine and it's
 only purpose is catching `SIGTERM` and `SIGINT`.
 
 ### TERMINATOR
-*INIT
-*IDLE
+* INIT
+* IDLE
 
 ### WORKER
 * INIT
