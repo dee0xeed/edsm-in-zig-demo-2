@@ -161,7 +161,7 @@ Tx is a machine which knows how to write data. Also has 3 states:
 
 ## Examples of workflow
 
-* client connected
+* client connected (note `D0`)
 
 ```
 LISTENER-1 @ WORK got 'D0' from OS
@@ -171,7 +171,7 @@ RX-4 @ IDLE got 'M1' from WORKER-4
 RX-4 @ IDLE got 'M0' from SELF
 ```
 
-* client suddenly disconnected
+* client suddenly disconnected (note `D2`)
 
 ```
 RX-4 @ IDLE got 'M0' from SELF
@@ -182,7 +182,7 @@ WORKER-4 @ FAIL got 'M0' from SELF
 LISTENER-1 @ WORK got 'M0' from WORKER-4
 ```
 
-* normal request-reply
+* normal request-reply (note `D0` and `D1`)
 
 ```
 RX-4 @ IDLE got 'M0' from SELF
@@ -199,7 +199,7 @@ WORKER-4 @ SEND got 'M1' from TX-4
 WORKER-4 @ SEND got 'M0' from SELF
 ```
 
-* request timeout
+* request timeout (note `T0`)
 
 ```
 RX-4 @ IDLE got 'M0' from SELF
