@@ -28,7 +28,7 @@ Event source is anything representable by file descriptor and thus can be used w
 * sockets, terminals, serial devices, fifoes etc.
 * file system (via `inotify` facility)
 
-Each event source has an owner (it is somr state machine).
+Each event source has an owner (it is some state machine).
 
 ### Event/messages notation
 
