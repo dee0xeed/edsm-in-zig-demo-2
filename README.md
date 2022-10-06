@@ -159,7 +159,7 @@ Tx is a machine which knows how to write data. Also has 3 states:
     * `M0`: goto `IDLE` state
     * leave: nothing
 
-## Examples of workflow
+### Examples of workflow
 
 * client connected (note `D0`)
 
@@ -209,3 +209,8 @@ WORKER-4 @ RECV got 'M2' from RX-4
 WORKER-4 @ FAIL got 'M0' from SELF
 LISTENER-1 @ WORK got 'M0' from WORKER-4
 ```
+
+## Links
+* [Event driven state machine](https://en.wikipedia.org/wiki/Event-driven_finite-state_machine)
+* [Reactor pattern](https://en.wikipedia.org/wiki/Reactor_pattern)
+* [Modeling Software with Finite State Machines](http://www.stateworks.com/book/book/)
