@@ -55,6 +55,11 @@ pub const EventSourceInfo = union(EventSourceKind) {
     fs: void,
 };
 
+//pub const ClientSocket = struct {
+//    fd: i32,
+//    addr: net.Address,
+//};
+
 pub const EventSource = struct {
 
     const Self = @This();
@@ -106,15 +111,32 @@ pub const EventSource = struct {
         return try os.accept(self.id, &addr.any, &alen, 0);
     }
 
-    fn getClientSocketFd(host: []const u8, port: []const u8) !i32 {
-        _ = host;
-        _ = port;
+    fn getClientSocketFd() !i32 {
+        return try os.socket(os.AF.INET, os.SOCK.STREAM, os.IPPROTO.TCP);
+    }
+
+    pub fn startConnect(self: *Self, addr: *net.Address) !void {
+        const InProgress = os.ConnectError.WouldBlock;
+
+        if (self.kind != .io) unreachable;
+        if (self.subkind != .csock) unreachable;
+
+        var flags = os.fcntl(self.id, os.F.GETFL, 0) catch unreachable;
+        flags |= os.O.NONBLOCK;
+        _ = os.fcntl(self.id, os.F.SETFL, flags) catch unreachable;
+
+        os.connect(self.id, &addr.any, addr.getOsSockLen()) catch |err| {
+            switch (err) {
+                InProgress => return,
+                else => return err,
+            }
+        };
     }
 
     fn getIoId(subkind: EventSourceSubKind, args: anytype) !i32 {
         return switch (subkind) {
             .ssock => if (1 == args.len) try getServerSocketFd(args[0]) else unreachable,
-            .csock => if (2 == args.len) try getClientSocketFd(args[0], args[1]) else unreachable,
+            .csock => if (0 == args.len) try getClientSocketFd() else unreachable,
             else => unreachable,
         };
     }
