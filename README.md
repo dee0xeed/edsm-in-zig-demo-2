@@ -1,4 +1,4 @@
-# edsm-in-zig-demo-2 (simple echo server)
+# edsm-in-zig-demo-2 (simple echo-server and echo-client)
 
 ## Preliminary notes
 
@@ -211,6 +211,20 @@ WORKER-4 @ RECV got 'M2' from RX-4
 WORKER-4 @ FAIL got 'M0' from SELF
 LISTENER-1 @ WORK got 'M0' from WORKER-4
 ```
+## Client architecture
+
+The client also consists of 4 kinds of state machines:
+
+* TERMINATOR (one instance)
+* WORKER (many instances)
+* RX/TX (many instances, in pools)
+
+However here we have only 2-level machine hierarchy
+because `TERMINATOR` is stand-alone machine and it's
+only purpose is catching `SIGTERM` and `SIGINT`.
+
+### TERMINATOR
+### WORKER
 
 ## Links
 * [Event driven state machine](https://en.wikipedia.org/wiki/Event-driven_finite-state_machine)
