@@ -4,10 +4,11 @@ const edsm = @import("engine/edsm.zig");
 const StageMachine = edsm.StageMachine;
 const Allocator = std.mem.Allocator;
 
-const MachinePtrList = std.ArrayList(*StageMachine);
-
 pub const MachinePool = struct {
+
     const Self = @This();
+    const MachinePtrList = std.ArrayList(*StageMachine);
+
     allocator: Allocator,
     list: MachinePtrList,
 
