@@ -225,15 +225,48 @@ only purpose is catching `SIGTERM` and `SIGINT`.
 
 ### TERMINATOR
 * INIT
+    * enter: init channels, send 'M0' to self
+    * `M0`: goto `IDLE` state
+    * leave: nothing
 * IDLE
+    * enter: enable channels (`SIGINT` and `SIGTERM`)
+    * `S0` and `S1`: stop event loop
+    * leave: nothing
 
 ### WORKER
 * INIT
+    * enter: init io and timer channels, send `M0` to self
+    * `M0`: goto `CONN` state
+    * leave: nothing
 * CONN
+    * enter: take `TX` machine, start connect, send `M1` to `TX`
+    * `M1`: send `M0` to self (connection Ok)
+    * `M2`: send `M3` to self (can not connect)
+    * `M0`: goto `SEND` state
+    * `M3`: goto `WAIT` state
+    * leave: nothing
 * SEND
+    * enter: prepare request, take `TX` machine, send it `M1`
+    * `M1`: send `M0` to self
+    * `M2`: send `M3` to self
+    * `M0`: goto `RECV` state
+    * `M3`: goto `WAIT` state
+    * leave: nothing
 * RECV
+    * enter: take `RX` machine, send it `M1`
+    * `M1`: send `M0` to self
+    * `M2`: send `M3` to self
+    * `M0`: goto `TWIX` state
+    * `M3`: goto `WAIT` state
+    * leave: nothing
 * TWIX
+    * enter: start timer (500 msec)
+    * `T0`: goto `SEND` state
+    * leave: nothing
 * WAIT
+    * enter: start timer (5000 msec)
+    * `T0`: goto `CONN` state
+    * leave: nothing
 
 ### Examples of workflow
 
