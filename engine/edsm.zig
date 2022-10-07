@@ -32,7 +32,7 @@ pub const StageMachine = struct {
         HasNoStates,
     };
 
-    pub const StageList = std.ArrayList(StageMachine.Stage);
+    const StageList = std.ArrayList(StageMachine.Stage);
     pub const Stage = struct {
 
         const reactFnPtr = *const fn(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void;
