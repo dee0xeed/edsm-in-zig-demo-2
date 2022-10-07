@@ -131,13 +131,13 @@ Rx is a machine which knows how to read data. Has 3 states:
 * IDLE
     * enter: put self into the pool
     * `M0`: goto `WORK` state
-    * `M1`: store context given by `WORKER`
+    * `M1`: store context given by requester
     * leave: nothing
 * WORK
     * enter: enable i/o and timer
-    * `D0`: read data
-    * `D2`: send `M0` to self, `M2` to `WORKER`
-    * `T0` (timeout): send `M0` to self, `M2` to `WORKER`
+    * `D0`: read data, when done send `M1` to requester
+    * `D2`: send `M0` to self, `M2` to requester
+    * `T0` (timeout): send `M0` to self, `M2` to requester
     * `M0`: goto `IDLE` state
     * leave: stop timer
 
@@ -152,12 +152,12 @@ Tx is a machine which knows how to write data. Also has 3 states:
 * IDLE
     * enter: put self into the pool
     * `M0`: goto `WORK` state
-    * `M1`: store context given by `WORKER`
+    * `M1`: store context given by requester
     * leave: nothing
 * WORK
     * enter: enable i/o
-    * `D1`: write data
-    * `D2`: send `M0` to self, `M2` to `WORKER`
+    * `D1`: write data, when done send `M1` to requester
+    * `D2`: send `M0` to self, `M2` to requester
     * `M0`: goto `IDLE` state
     * leave: nothing
 
