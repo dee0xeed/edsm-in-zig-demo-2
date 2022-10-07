@@ -3,79 +3,16 @@ const std = @import("std");
 const print = std.debug.print;
 const Allocator = std.mem.Allocator;
 
-const msgq = @import("message-queue.zig");
-const Message = msgq.Message;
-const MessageQueue = msgq.MessageQueue;
-const MessageDispatcher = msgq.MessageDispatcher;
+const mq = @import("message-queue.zig");
+const MessageDispatcher = mq.MessageDispatcher;
+const MessageQueue = MessageDispatcher.MessageQueue;
+const Message = MessageQueue.Message;
 
 const esrc = @import("event-sources.zig");
-const EventSourceKind = esrc.EventSourceKind;
-const EventSourceSubKind = esrc.EventSourceSubKind;
 const EventSource = esrc.EventSource;
-const EventSourceInfo = esrc.EventSourceInfo;
-const SignalInfo = esrc.SignalInfo;
-const IoInfo = esrc.IoInfo;
-const TimerInfo = esrc.TimerInfo;
-
-const reactFnPtr = *const fn (me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void;
-const enterFnPtr = *const fn (me: *StageMachine) void;
-const leaveFnPtr = enterFnPtr;
-
-const ReflexKind = enum {
-    action,
-    transition
-};
-
-pub const Reflex = union(ReflexKind) {
-    action: reactFnPtr,
-    transition: *Stage,
-};
-
-pub const Stage = struct {
-
-    /// number of rows in reflex matrix
-    const nrows = @typeInfo(EventSourceKind).Enum.fields.len;
-    const esk_tags = "MDSTF";
-    /// number of columns in reflex matrix
-    const ncols = 16;
-    /// name of a stage
-    name: []const u8,
-    /// called when machine enters a stage
-    enter: ?enterFnPtr = null,
-    /// called when machine leaves a stage
-    leave: ?leaveFnPtr = null,
-
-    /// reflex matrix
-    /// row 0: M0 M1 M2 ... M15 : internal messages
-    /// row 1: D0 D1 D2         : i/o (POLLIN, POLLOUT, POLLERR)
-    /// row 2: S0 S1 S2 ... S15 : signals
-    /// row 3: T0 T1 T2 ... T15 : timers
-    /// row 4: F0.............. : file system events
-    reflexes: [nrows][ncols]?Reflex = [nrows][ncols]?Reflex {
-        [_]?Reflex{null} ** ncols,
-        [_]?Reflex{null} ** ncols,
-        [_]?Reflex{null} ** ncols,
-        [_]?Reflex{null} ** ncols,
-        [_]?Reflex{null} ** ncols,
-    },
-
-    pub fn setReflex(self: *Stage, esk: EventSourceKind, seqn: u4, refl: Reflex) void {
-        const row: u8 = @enumToInt(esk);
-        const col: u8 = seqn;
-        if (self.reflexes[row][col]) |_| {
-            print("{s} already has relfex for '{c}{}'\n", .{self.name, esk_tags[row], seqn});
-            unreachable;
-        }
-        self.reflexes[row][col] = refl;
-    }
-};
-
-pub const StageList = std.ArrayList(Stage);
-
-const StageMachineError = error {
-    IsAlreadyRunning,
-    HasNoStates,
-};
+const AboutSignal= EventSource.AboutSignal;
+const AboutIo = EventSource.AboutIo;
+const AboutTimer= EventSource.AboutTimer;
 
 pub const StageMachine = struct {
 
@@ -86,13 +23,73 @@ pub const StageMachine = struct {
     is_running: bool = false,
     stages: StageList,
     current_stage: *Stage = undefined,
-    md: *msgq.MessageDispatcher,
+    md: *MessageDispatcher,
     allocator: Allocator,
     data: ?*anyopaque = null,
 
+    const StageMachineError = error {
+        IsAlreadyRunning,
+        HasNoStates,
+    };
+
+    pub const StageList = std.ArrayList(StageMachine.Stage);
+    pub const Stage = struct {
+
+        const reactFnPtr = *const fn(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void;
+        const enterFnPtr = *const fn(me: *StageMachine) void;
+        const leaveFnPtr = enterFnPtr;
+
+        const ReflexKind = enum {
+            action,
+            transition
+        };
+
+        pub const Reflex = union(ReflexKind) {
+            action: reactFnPtr,
+            transition: *Stage,
+        };
+
+        /// number of rows in reflex matrix
+        const nrows = @typeInfo(EventSource.Kind).Enum.fields.len;
+        const esk_tags = "MDSTF";
+        /// number of columns in reflex matrix
+        const ncols = 16;
+        /// name of a stage
+        name: []const u8,
+        /// called when machine enters a stage
+        enter: ?enterFnPtr = null,
+        /// called when machine leaves a stage
+        leave: ?leaveFnPtr = null,
+
+        /// reflex matrix
+        /// row 0: M0 M1 M2 ... M15 : internal messages
+        /// row 1: D0 D1 D2         : i/o (POLLIN, POLLOUT, POLLERR)
+        /// row 2: S0 S1 S2 ... S15 : signals
+        /// row 3: T0 T1 T2 ... T15 : timers
+        /// row 4: F0.............. : file system events
+        reflexes: [nrows][ncols]?Reflex = [nrows][ncols]?Reflex {
+            [_]?Reflex{null} ** ncols,
+            [_]?Reflex{null} ** ncols,
+            [_]?Reflex{null} ** ncols,
+            [_]?Reflex{null} ** ncols,
+            [_]?Reflex{null} ** ncols,
+        },
+
+        sm: *StageMachine = undefined,
+
+        pub fn setReflex(self: *Stage, esk: EventSource.Kind, seqn: u4, refl: Reflex) void {
+            const row: u8 = @enumToInt(esk);
+            const col: u8 = seqn;
+            if (self.reflexes[row][col]) |_| {
+                print("{s}/{s} already has relfex for '{c}{}'\n", .{self.sm.name, self.name, esk_tags[row], seqn});
+                unreachable;
+            }
+            self.reflexes[row][col] = refl;
+        }
+    };
+
     pub fn init(a: Allocator, md: *MessageDispatcher) StageMachine {
         return StageMachine {
-//            .name = name,
             .md = md,
             .stages = StageList.init(a),
             .allocator = a,
@@ -109,6 +106,7 @@ pub const StageMachine = struct {
     pub fn addStage(self: *Self, st: Stage) !void {
         var ptr = try self.stages.addOne();
         ptr.* = st;
+        ptr.*.sm = self;
     }
 
     pub fn initTimer(self: *Self, tm: *EventSource, seqn: u4) !void {
@@ -129,7 +127,7 @@ pub const StageMachine = struct {
     pub fn initIo(self: *Self, io: *EventSource) void {
         io.id = -1;
         io.kind = .io;
-        io.info = EventSourceInfo{.io = IoInfo{}};
+        io.info = EventSource.Info{.io = AboutIo{}};
         io.owner = self;
         io.seqn = 0; // undefined;
     }

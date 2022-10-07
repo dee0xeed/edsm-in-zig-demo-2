@@ -6,9 +6,10 @@ const math = std.math;
 const print = std.debug.print;
 const Allocator = std.mem.Allocator;
 
-const msgq = @import("../engine/message-queue.zig");
-const Message = msgq.Message;
-const MessageDispatcher = msgq.MessageDispatcher;
+const mq = @import("../engine/message-queue.zig");
+const MessageDispatcher = mq.MessageDispatcher;
+const MessageQueue = MessageDispatcher.MessageQueue;
+const Message = MessageQueue.Message;
 
 const esrc = @import("../engine//event-sources.zig");
 const EventSourceKind = esrc.EventSourceKind;
@@ -16,12 +17,12 @@ const EventSourceSubKind = esrc.EventSourceSubKind;
 const EventSource = esrc.EventSource;
 
 const edsm = @import("../engine/edsm.zig");
-const Reflex = edsm.Reflex;
-const Stage = edsm.Stage;
-const StageList = edsm.StageList;
 const StageMachine = edsm.StageMachine;
-const MachinePool = @import("../machine-pool.zig").MachinePool;
+const Stage = StageMachine.Stage;
+const Reflex = Stage.Reflex;
+const StageList = edsm.StageList;
 
+const MachinePool = @import("../machine-pool.zig").MachinePool;
 const Client = @import("client.zig").Client;
 const Context =  @import("../common-sm/context.zig").IoContext;
 const utils = @import("../utils.zig");

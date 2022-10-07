@@ -19,42 +19,6 @@ const edsm = @import("edsm.zig");
 const StageMachine = edsm.StageMachine;
 const ecap = @import("event-capture.zig");
 
-pub const EventSourceKind = enum {
-    sm, // state machine
-    io, // socket, serial etc.
-    sg, // signal
-    tm, // timer
-    fs, // file system
-};
-
-/// this is for i/o kind, for other kind must be set to 'none'
-pub const EventSourceSubKind = enum {
-    none,
-    ssock,  // listening TCP socket
-    csock,  // client TCP socket
-    serdev, // '/dev/ttyS0' and alike
-};
-
-pub const IoInfo = struct {
-    bytes_avail: u32 = 0,
-};
-
-pub const TimerInfo = struct {
-    nexp: u64 = 0,
-};
-
-pub const SignalInfo = struct {
-    sig_info: SigInfo = undefined,
-};
-
-pub const EventSourceInfo = union(EventSourceKind) {
-    sm: void,
-    io: IoInfo,
-    sg: SignalInfo,
-    tm: TimerInfo,
-    fs: void,
-};
-
 //pub const ClientSocket = struct {
 //    fd: i32,
 //    addr: net.Address,
@@ -63,17 +27,53 @@ pub const EventSourceInfo = union(EventSourceKind) {
 pub const EventSource = struct {
 
     const Self = @This();
-    kind: EventSourceKind,
-    subkind: EventSourceSubKind,
+    kind: Kind,
+    subkind: SubKind,
     id: i32 = -1, // fd in most cases, but not always
     owner: *StageMachine,
     seqn: u4 = 0,
-    info: EventSourceInfo,
+    info: Info,
+
+    pub const Kind = enum {
+        sm, // state machine
+        io, // socket, serial etc.
+        sg, // signal
+        tm, // timer
+        fs, // file system
+    };
+
+    /// this is for i/o kind, for other kind must be set to 'none'
+    pub const SubKind = enum {
+        none,
+        ssock,  // listening TCP socket
+        csock,  // client TCP socket
+        serdev, // '/dev/ttyS0' and alike
+    };
+
+    pub const AboutIo = struct {
+        bytes_avail: u32 = 0,
+    };
+
+    pub const AboutTimer = struct {
+        nexp: u64 = 0,
+    };
+
+    pub const AboutSignal = struct {
+        sig_info: SigInfo = undefined,
+    };
+
+    pub const Info = union(Kind) {
+        sm: void,
+        io: AboutIo,
+        sg: AboutSignal,
+        tm: AboutTimer,
+        fs: void,
+    };
 
     pub fn init(
         owner: *StageMachine,
-        esk: EventSourceKind,
-        essk: EventSourceSubKind,
+        esk: EventSource.Kind,
+        essk: EventSource.SubKind,
         seqn: u4
     ) EventSource {
         if ((esk != .io) and (essk != .none)) unreachable;
@@ -83,9 +83,9 @@ pub const EventSource = struct {
             .owner = owner,
             .seqn = seqn,
             .info = switch (esk) {
-                .io => EventSourceInfo{.io = IoInfo{}},
-                .sg => EventSourceInfo{.sg = SignalInfo{}},
-                .tm => EventSourceInfo{.tm = TimerInfo{}},
+                .io => Info{.io = AboutIo{}},
+                .sg => Info{.sg = AboutSignal{}},
+                .tm => Info{.tm = AboutTimer{}},
                 else => unreachable,
             }
         };
@@ -133,7 +133,7 @@ pub const EventSource = struct {
         };
     }
 
-    fn getIoId(subkind: EventSourceSubKind, args: anytype) !i32 {
+    fn getIoId(subkind: EventSource.SubKind, args: anytype) !i32 {
         return switch (subkind) {
             .ssock => if (1 == args.len) try getServerSocketFd(args[0]) else unreachable,
             .csock => if (0 == args.len) try getClientSocketFd() else unreachable,
@@ -207,7 +207,7 @@ pub const EventSource = struct {
             else => unreachable,
         };
         var p2 = @ptrCast([*]u8, @alignCast(@alignOf([*]u8), p1));
-        var buf = p2[0..@sizeOf(TimerInfo)];
+        var buf = p2[0..@sizeOf(AboutTimer)];
         _ = try std.os.read(self.id, buf[0..]);
     }
 

@@ -8,9 +8,12 @@ const epollCtl = std.os.epoll_ctl;
 const epollWait = std.os.epoll_wait;
 const EPOLL = std.os.linux.EPOLL;
 const ioctl = std.os.linux.ioctl;
+
 const msgq = @import("message-queue.zig");
-const Message = msgq.Message;
-const MessageQueue = msgq.MessageQueue;
+const MD = msgq.MessageDispatcher;
+const MessageQueue = MD.MessageQueue;
+const Message = MessageQueue.Message;
+
 const esrc = @import("event-sources.zig");
 const EventSourceKind = esrc.EventSourceKind;
 const EventSource = esrc.EventSource;
