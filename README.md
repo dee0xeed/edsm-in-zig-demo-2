@@ -53,7 +53,7 @@ These 'tags' are used in the names of state machines 'methods', for example:
 ### Enter/Leave functions
 
 Each state can have enter/leave functions, which can be used to perform some action
-in addition to 'regular' actions. For example, `RX` machine stops timeout timer
+in addition to 'regular' actions. For example, `RX` machine (see below) stops timeout timer
 when leaving `WORK` state:
 
 ```zig
