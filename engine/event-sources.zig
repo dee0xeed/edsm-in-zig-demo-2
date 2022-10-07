@@ -27,12 +27,6 @@ const ecap = @import("event-capture.zig");
 pub const EventSource = struct {
 
     const Self = @This();
-    kind: Kind,
-    subkind: SubKind,
-    id: i32 = -1, // fd in most cases, but not always
-    owner: *StageMachine,
-    seqn: u4 = 0,
-    info: Info,
 
     pub const Kind = enum {
         sm, // state machine
@@ -69,6 +63,13 @@ pub const EventSource = struct {
         tm: AboutTimer,
         fs: void,
     };
+
+    kind: Kind,
+    subkind: SubKind,
+    id: i32 = -1, // fd in most cases, but not always
+    owner: *StageMachine,
+    seqn: u4 = 0,
+    info: Info,
 
     pub fn init(
         owner: *StageMachine,
