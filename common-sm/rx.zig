@@ -131,18 +131,18 @@ pub const RxPotBoy = struct {
         me.msgTo(pd.customer, M1_DONE, null);
     }
 
-    fn workD2(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn workD2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        _ = data;
+        _ = dptr;
         var pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
     }
 
     // timeout
-    fn workT0(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn workT0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        _ = data;
+        _ = dptr;
         var pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);

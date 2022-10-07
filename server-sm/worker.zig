@@ -136,10 +136,10 @@ pub const Worker = struct {
     }
 
     // message from RX machine (success)
-    fn recvM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn recvM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
         _ = pd;
-        _ = data;
+        _ = dptr;
         _ = src;
         me.msgTo(me, M0_SEND, null);
     }
@@ -155,9 +155,9 @@ pub const Worker = struct {
     }
 
     // message from TX machine (success)
-    fn sendM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn sendM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        _ = data;
+        _ = dptr;
         me.msgTo(me, M0_RECV, null);
     }
 
