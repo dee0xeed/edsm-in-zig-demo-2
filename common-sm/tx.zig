@@ -23,6 +23,8 @@ const StageMachine = edsm.StageMachine;
 const MachinePool = @import("../machine-pool.zig").MachinePool;
 const Context =  @import("../common-sm/context.zig").IoContext;
 
+const utils = @import("../utils.zig");
+
 pub const TxPotBoy = struct {
 
     const M0_IDLE = Message.M0;
@@ -60,43 +62,43 @@ pub const TxPotBoy = struct {
         work.setReflex(.sm, Message.M0, Reflex{.transition = idle});
 
         me.data = me.allocator.create(TxData) catch unreachable;
-        var pd = @ptrCast(*TxData, @alignCast(@alignOf(*TxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *TxData);
         pd.my_pool = tx_pool;
         return me;
     }
 
     fn initEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*TxData, @alignCast(@alignOf(*TxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *TxData);
         me.initIo(&pd.io0);
         me.msgTo(me, M0_IDLE, null);
     }
 
     fn idleEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*TxData, @alignCast(@alignOf(*TxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *TxData);
         pd.ctx = undefined;
         pd.customer = null;
         pd.my_pool.put(me) catch unreachable;
     }
 
     // message from 'customer' - 'transfer data'
-    fn idleM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
-        var pd = @ptrCast(*TxData, @alignCast(@alignOf(*TxData), me.data));
+    fn idleM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        var pd = utils.opaqPtrTo(me.data, *TxData);
         pd.customer = src;
-        pd.ctx = @ptrCast(*Context, @alignCast(@alignOf(*Context), data));
+        pd.ctx = utils.opaqPtrTo(dptr, *Context);
         pd.io0.id = pd.ctx.fd;
         me.msgTo(me, M0_WORK, null);
     }
 
     fn workEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*TxData, @alignCast(@alignOf(*TxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *TxData);
         pd.ctx.cnt = pd.ctx.buf.len;
         pd.io0.enableOut(&me.md.eq) catch unreachable;
     }
 
-    fn workD1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn workD1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        var io = @ptrCast(*EventSource, @alignCast(@alignOf(*EventSource), data));
-        var pd = @ptrCast(*TxData, @alignCast(@alignOf(*TxData), me.data));
+        var io = utils.opaqPtrTo(dptr, *EventSource);
+        var pd = utils.opaqPtrTo(me.data, *TxData);
 
         if (0 == pd.ctx.cnt) {
             // it was request for asynchronous connect
@@ -121,10 +123,10 @@ pub const TxPotBoy = struct {
         me.msgTo(pd.customer, M1_DONE, null);
     }
 
-    fn workD2(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn workD2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        _ = data;
-        var pd = @ptrCast(*TxData, @alignCast(@alignOf(*TxData), me.data));
+        _ = dptr;
+        var pd = utils.opaqPtrTo(me.data, *TxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
     }

@@ -24,6 +24,7 @@ const MachinePool = @import("../machine-pool.zig").MachinePool;
 
 const Client = @import("client.zig").Client;
 const Context =  @import("../common-sm/context.zig").IoContext;
+const utils = @import("../utils.zig");
 
 pub const Worker = struct {
 
@@ -85,7 +86,7 @@ pub const Worker = struct {
         fail.setReflex(.sm, Message.M0, Reflex{.transition = idle});
 
         me.data = me.allocator.create(WorkerData) catch unreachable;
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         pd.my_pool = my_pool;
         pd.rx_pool = rx_pool;
         pd.tx_pool = tx_pool;
@@ -97,16 +98,16 @@ pub const Worker = struct {
     }
 
     fn idleEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         pd.listener = null;
         pd.client = null;
         pd.my_pool.put(me) catch unreachable;
     }
 
     // message from LISTENER (new client)
-    fn idleM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
-        var client = @ptrCast(*Client, @alignCast(@alignOf(*Client), data));
+    fn idleM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
+        var client = utils.opaqPtrTo(dptr, *Client);
         pd.listener = src;
         pd.client = client;
         pd.ctx.fd = client.fd;
@@ -121,13 +122,11 @@ pub const Worker = struct {
     }
 
     fn recvEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
-
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         var rx = pd.rx_pool.get() orelse {
             me.msgTo(me, M2_FAIL, null);
             return;
         };
-
         pd.ctx.fd = if (pd.client) |c| c.fd else unreachable;
         pd.ctx.needMore = &myNeedMore;
         pd.ctx.timeout = 10000; // msec
@@ -137,7 +136,7 @@ pub const Worker = struct {
 
     // message from RX machine (success)
     fn recvM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         _ = pd;
         _ = data;
         _ = src;
@@ -145,13 +144,11 @@ pub const Worker = struct {
     }
 
     fn sendEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
-
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         var tx = pd.tx_pool.get() orelse {
             me.msgTo(me, M2_FAIL, null);
             return;
         };
-
         pd.ctx.buf = pd.request[0..pd.ctx.cnt];
         me.msgTo(tx, M1_WORK, &pd.ctx);
     }
@@ -164,7 +161,7 @@ pub const Worker = struct {
     }
 
     fn failEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.listener, M0_GONE, pd.client);
     }

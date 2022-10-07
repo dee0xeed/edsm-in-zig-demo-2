@@ -62,6 +62,10 @@ pub const Stage = struct {
     pub fn setReflex(self: *Stage, esk: EventSourceKind, seqn: u4, refl: Reflex) void {
         const row: u8 = @enumToInt(esk);
         const col: u8 = seqn;
+        if (self.reflexes[row][col]) |_| {
+            print("{s} already has relfex for '{c}{}'\n", .{self.name, esk_tags[row], seqn});
+            unreachable;
+        }
         self.reflexes[row][col] = refl;
     }
 };

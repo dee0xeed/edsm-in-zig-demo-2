@@ -19,6 +19,8 @@ const Stage = edsm.Stage;
 const StageList = edsm.StageList;
 const StageMachine = edsm.StageMachine;
 
+const utils = @import("../utils.zig");
+
 pub const Terminator = struct {
 
     const M0_IDLE = Message.M0;
@@ -49,21 +51,21 @@ pub const Terminator = struct {
     }
 
     fn initEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*TerminatorData, @alignCast(@alignOf(*TerminatorData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *TerminatorData);
         me.initSignal(&pd.sg0, std.os.SIG.INT, Message.S0) catch unreachable;
         me.initSignal(&pd.sg1, std.os.SIG.TERM, Message.S1) catch unreachable;
         me.msgTo(me, M0_IDLE, null);
     }
 
     fn idleEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*TerminatorData, @alignCast(@alignOf(*TerminatorData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *TerminatorData);
         pd.sg0.enable(&me.md.eq, .{}) catch unreachable;
         pd.sg1.enable(&me.md.eq, .{}) catch unreachable;
     }
 
-    fn idleS0(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn idleS0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        var sg = @ptrCast(*EventSource, @alignCast(@alignOf(*EventSource), data));
+        var sg = utils.opaqPtrTo(dptr, *EventSource);
         var si = sg.info.sg.sig_info;
         print("got signal #{} from PID {}\n", .{si.signo, si.pid});
         me.msgTo(null, Message.M0, null);

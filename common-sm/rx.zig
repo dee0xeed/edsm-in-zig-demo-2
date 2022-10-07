@@ -23,6 +23,8 @@ const StageMachine = edsm.StageMachine;
 const MachinePool = @import("../machine-pool.zig").MachinePool;
 const Context =  @import("../common-sm/context.zig").IoContext;
 
+const utils = @import("../utils.zig");
+
 pub const RxPotBoy = struct {
 
     const M0_IDLE = Message.M0;
@@ -62,30 +64,30 @@ pub const RxPotBoy = struct {
         work.setReflex(.sm, Message.M0, Reflex{.transition = idle});
 
         me.data = me.allocator.create(RxData) catch unreachable;
-        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *RxData);
         pd.my_pool = rx_pool;
         return me;
     }
 
     fn initEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *RxData);
         me.initTimer(&pd.tm0, Message.T0) catch unreachable;
         me.initIo(&pd.io0);
         me.msgTo(me, M0_IDLE, null);
     }
 
     fn idleEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *RxData);
         pd.ctx = undefined;
         pd.customer = null;
         pd.my_pool.put(me) catch unreachable;
     }
 
     // message from 'customer' - 'bring me data'
-    fn idleM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
-        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+    fn idleM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        var pd = utils.opaqPtrTo(me.data, *RxData);
         pd.customer = src;
-        pd.ctx = @ptrCast(*Context, @alignCast(@alignOf(*Context), data));
+        pd.ctx = utils.opaqPtrTo(dptr, *Context);
         pd.io0.id = pd.ctx.fd;
         me.msgTo(me, M0_WORK, null);
     }
@@ -98,10 +100,10 @@ pub const RxPotBoy = struct {
         pd.io0.enable(&me.md.eq, .{}) catch unreachable;
     }
 
-    fn workD0(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn workD0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        var io = @ptrCast(*EventSource, @alignCast(@alignOf(*EventSource), data));
-        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+        var io = utils.opaqPtrTo(dptr, *EventSource);
+        var pd = utils.opaqPtrTo(me.data, *RxData);
 
         const ba = io.info.io.bytes_avail;
         if (0 == ba) {
@@ -130,7 +132,7 @@ pub const RxPotBoy = struct {
     fn workD2(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
         _ = src;
         _ = data;
-        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
     }
@@ -139,13 +141,13 @@ pub const RxPotBoy = struct {
     fn workT0(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
         _ = src;
         _ = data;
-        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
     }
 
     fn workLeave(me: *StageMachine) void {
-        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *RxData);
         pd.tm0.disable(&me.md.eq) catch unreachable;
     }
 };

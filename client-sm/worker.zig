@@ -21,7 +21,9 @@ const Stage = edsm.Stage;
 const StageList = edsm.StageList;
 const StageMachine = edsm.StageMachine;
 const MachinePool = @import("../machine-pool.zig").MachinePool;
-const Context =  @import("../common-sm/context.zig").IoContext;
+const Context = @import("../common-sm/context.zig").IoContext;
+
+const utils = @import("../utils.zig");
 
 pub const Worker = struct {
 
@@ -94,7 +96,7 @@ pub const Worker = struct {
         wait.setReflex(.tm, Message.T0, Reflex{.transition = conn});
 
         me.data = me.allocator.create(WorkerData) catch unreachable;
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         pd.host = host;
         pd.port = port;
         pd.rxp = rx_pool;
@@ -104,7 +106,7 @@ pub const Worker = struct {
     }
 
     fn initEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         pd.io = EventSource.init(me, .io, .csock, Message.D0);
         me.initTimer(&pd.tm, Message.T0) catch unreachable;
         pd.addr = net.Address.resolveIp(pd.host, pd.port) catch unreachable;
@@ -112,8 +114,7 @@ pub const Worker = struct {
     }
 
     fn connEnter(me: *StageMachine) void {
-
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         pd.io.getId(.{}) catch unreachable;
 
         var tx = pd.txp.get() orelse {
@@ -128,63 +129,60 @@ pub const Worker = struct {
     }
 
     // message from TX machine, connection established
-    fn connM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn connM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        _ = data;
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        _ = dptr;
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         print("{s} : connected to '{s}:{}'\n", .{me.name, pd.host, pd.port});
         me.msgTo(me, M0_SEND, null);
     }
 
     // message from TX machine, can't connect
-    fn connM2(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn connM2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        _ = data;
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        _ = dptr;
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         print("{s} : can not connect to '{s}:{}'\n", .{me.name, pd.host, pd.port});
         me.msgTo(me, M3_WAIT, null);
     }
 
     fn sendEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         var tx = pd.txp.get() orelse {
             me.msgTo(me, M3_WAIT, null);
             return;
         };
-
         pd.request_seqn += 1;
         pd.ctx.buf = std.fmt.bufPrint(&pd.request, "{s}-{}\n", .{me.name, pd.request_seqn}) catch unreachable;
         me.msgTo(tx, M1_WORK, &pd.ctx);
     }
 
     // message from TX machine (success)
-    fn sendM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn sendM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        _ = data;
+        _ = dptr;
         me.msgTo(me, M0_RECV, null);
     }
 
     // message from TX machine (failure)
-    fn sendM2(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+    fn sendM2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        _ = data;
+        _ = dptr;
         me.msgTo(me, M3_WAIT, null);
     }
 
     fn myNeedMore(buf: []u8) bool {
-//        print("<<< {} bytes: {any}\n", .{buf.len, buf});
         if (0x0A == buf[buf.len - 1])
             return false;
         return true;
     }
 
     fn recvEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         var rx = pd.rxp.get() orelse {
             me.msgTo(me, M3_WAIT, null);
             return;
         };
-
         pd.ctx.needMore = &myNeedMore;
         pd.ctx.timeout = 10000; // msec
         pd.ctx.buf = pd.reply[0..];
@@ -192,30 +190,30 @@ pub const Worker = struct {
     }
 
     // message from RX machine (success)
-    fn recvM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
-        _ = data;
+    fn recvM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
+        _ = dptr;
         _ = src;
         print("reply: {s}", .{pd.reply[0..pd.ctx.cnt]});
         me.msgTo(me, M0_TWIX, null);
     }
 
     // message from RX machine (failure)
-    fn recvM2(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+    fn recvM2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         _ = pd;
-        _ = data;
+        _ = dptr;
         _ = src;
         me.msgTo(me, M3_WAIT, null);
     }
 
     fn twixEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         pd.tm.enable(&me.md.eq, .{500}) catch unreachable;
     }
 
     fn waitEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*WorkerData, @alignCast(@alignOf(*WorkerData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
         os.close(pd.io.id);
         pd.tm.enable(&me.md.eq, .{5000}) catch unreachable;
     }
