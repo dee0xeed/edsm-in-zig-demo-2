@@ -135,7 +135,7 @@ Rx is a machine which knows how to read data. Has 3 states:
     * leave: nothing
 * WORK
     * enter: enable i/o and timer
-    * `D0`: read data, when done send `M1` to requester
+    * `D0`: read data, send `M1` to requester when done
     * `D2`: send `M0` to self, `M2` to requester
     * `T0` (timeout): send `M0` to self, `M2` to requester
     * `M0`: goto `IDLE` state
@@ -156,7 +156,7 @@ Tx is a machine which knows how to write data. Also has 3 states:
     * leave: nothing
 * WORK
     * enter: enable i/o
-    * `D1`: write data, when done send `M1` to requester
+    * `D1`: write data, send `M1` to requester when done
     * `D2`: send `M0` to self, `M2` to requester
     * `M0`: goto `IDLE` state
     * leave: nothing
