@@ -67,8 +67,8 @@ pub const Listener = struct {
 
     fn initEnter(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *ListenerData);
-        me.initSignal(&pd.sg0, std.os.SIG.INT, Message.S0) catch unreachable;
-        me.initSignal(&pd.sg1, std.os.SIG.TERM, Message.S1) catch unreachable;
+        me.initSignal(&pd.sg0, os.SIG.INT, Message.S0) catch unreachable;
+        me.initSignal(&pd.sg1, os.SIG.TERM, Message.S1) catch unreachable;
         me.initListener(&pd.io0, pd.port) catch unreachable;
         me.msgTo(me, M0_WORK, null);
     }
