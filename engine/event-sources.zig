@@ -42,7 +42,7 @@ pub const EventSource = struct {
         fs, // file system
     };
 
-    /// this is for i/o kind, for other kind must be set to 'none'
+    /// this is for i/o kind, for other kinds must be set to 'none'
     pub const SubKind = enum {
         none,
         ssock,  // listening TCP socket
@@ -142,15 +142,15 @@ pub const EventSource = struct {
     }
 
     fn getSignalId(signo: u6) !i32 {
-        var sset: SigSet = std.os.empty_sigset;
+        var sset: SigSet = os.empty_sigset;
         // block the signal
-        std.os.linux.sigaddset(&sset, signo);
+        os.linux.sigaddset(&sset, signo);
         sigProcMask(SIG.BLOCK, &sset, null);
         return signalFd(-1, &sset, 0);
     }
 
     fn getTimerId() !i32 {
-        return try timerFd(std.os.CLOCK.REALTIME, 0);
+        return try timerFd(os.CLOCK.REALTIME, 0);
     }
 
     /// obtain fd from OS
@@ -208,7 +208,7 @@ pub const EventSource = struct {
         };
         var p2 = @ptrCast([*]u8, @alignCast(@alignOf([*]u8), p1));
         var buf = p2[0..@sizeOf(AboutTimer)];
-        _ = try std.os.read(self.id, buf[0..]);
+        _ = try os.read(self.id, buf[0..]);
     }
 
     fn readSignalInfo(self: *Self) !void {
@@ -218,7 +218,7 @@ pub const EventSource = struct {
         };
         var p2 = @ptrCast([*]u8, @alignCast(@alignOf([*]u8), p1));
         var buf = p2[0..@sizeOf(SigInfo)];
-        _ = try std.os.read(self.id, buf[0..]);
+        _ = try os.read(self.id, buf[0..]);
     }
 
     pub fn readInfo(self: *Self) !void {

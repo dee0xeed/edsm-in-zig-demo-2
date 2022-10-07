@@ -1,13 +1,14 @@
 
 const std = @import("std");
+const os = std.os;
 const print = std.debug.print;
-const EpollEvent = std.os.linux.epoll_event;
-const EpollData = std.os.linux.epoll_data;
-const epollCreate = std.os.epoll_create1;
-const epollCtl = std.os.epoll_ctl;
-const epollWait = std.os.epoll_wait;
-const EPOLL = std.os.linux.EPOLL;
-const ioctl = std.os.linux.ioctl;
+const EpollEvent = os.linux.epoll_event;
+const EpollData = os.linux.epoll_data;
+const epollCreate = os.epoll_create1;
+const epollCtl = os.epoll_ctl;
+const epollWait = os.epoll_wait;
+const EPOLL = os.linux.EPOLL;
+const ioctl = os.linux.ioctl;
 
 const msgq = @import("message-queue.zig");
 const MD = msgq.MessageDispatcher;
@@ -35,12 +36,12 @@ pub const EventQueue = struct {
     }
 
     pub fn fini(self: *EventQueue) void {
-        std.os.close(self.fd);
+        os.close(self.fd);
     }
 
     fn getIoEventInfo(es: *EventSource, events: u32) !u4 {
 
-        const FIONREAD = std.os.linux.T.FIONREAD;
+        const FIONREAD = os.linux.T.FIONREAD;
         if (0 != events & (EPOLL.ERR | EPOLL.HUP | EPOLL.RDHUP)) {
             return Message.D2;
         }
@@ -101,7 +102,7 @@ pub const EventQueue = struct {
 
     fn enableEventSource(self: *EventQueue, es: *EventSource, ek: EventKind) !void {
 
-        const FdAlreadyInSet = std.os.EpollCtlError.FileDescriptorAlreadyPresentInSet;
+        const FdAlreadyInSet = os.EpollCtlError.FileDescriptorAlreadyPresentInSet;
         var em: u32 = if (.can_read == ek) (EPOLL.IN | EPOLL.RDHUP) else EPOLL.OUT;
         em |= EPOLL.ONESHOT;
 

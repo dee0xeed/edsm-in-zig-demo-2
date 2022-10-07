@@ -95,7 +95,7 @@ pub const MessageDispatcher = struct {
                 .index_mask = cap - 1,
                 .r_index = 0,
                 .w_index = cap - 1,
-               .n_items = 0,
+                .n_items = 0,
             };
         }
 
