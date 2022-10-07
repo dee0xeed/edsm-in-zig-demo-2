@@ -235,6 +235,51 @@ only purpose is catching `SIGTERM` and `SIGINT`.
 * TWIX
 * WAIT
 
+### Examples of workflow
+
+* successful connection
+
+```
+TX-1 @ IDLE got 'M1' from WORKER-1
+TX-1 @ IDLE got 'M0' from SELF
+TX-1 @ WORK got 'D1' from OS
+TX-1 @ WORK got 'M0' from SELF
+WORKER-1 @ CONN got 'M1' from TX-1
+WORKER-1 : connected to '127.0.0.1:3333'
+WORKER-1 @ CONN got 'M0' from SELF
+
+```
+
+* failed connection
+
+```
+TX-1 @ IDLE got 'M1' from WORKER-1
+TX-1 @ IDLE got 'M0' from SELF
+TX-1 @ WORK got 'D2' from OS
+TX-1 @ WORK got 'M0' from SELF
+WORKER-1 @ CONN got 'M2' from TX-1
+WORKER-1 : can not connect to '127.0.0.1:3333'
+WORKER-1 @ CONN got 'M3' from SELF
+```
+
+* request-reply
+
+```
+TX-1 @ IDLE got 'M1' from WORKER-1
+TX-1 @ IDLE got 'M0' from SELF
+TX-1 @ WORK got 'D1' from OS
+TX-1 @ WORK got 'M0' from SELF
+WORKER-1 @ SEND got 'M1' from TX-1
+WORKER-1 @ SEND got 'M0' from SELF
+RX-1 @ IDLE got 'M1' from WORKER-1
+RX-1 @ IDLE got 'M0' from SELF
+RX-1 @ WORK got 'D0' from OS
+RX-1 @ WORK got 'M0' from SELF
+WORKER-1 @ RECV got 'M1' from RX-1
+reply: WORKER-1-7
+
+```
+
 ## Links
 * [Event driven state machine](https://en.wikipedia.org/wiki/Event-driven_finite-state_machine)
 * [Reactor pattern](https://en.wikipedia.org/wiki/Reactor_pattern)
