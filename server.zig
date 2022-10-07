@@ -16,8 +16,8 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     //defer print("leakage?.. {}\n", .{gpa.deinit()});
     const allocator = gpa.allocator();
-    var md = try MessageDispatcher.onStack(allocator, 5);
 
+    var md = try MessageDispatcher.onStack(allocator, 5);
     var worker_pool = try MachinePool.init(allocator, max_clients);
     var rx_pool = try MachinePool.init(allocator, max_clients);
     var tx_pool = try MachinePool.init(allocator, max_clients);

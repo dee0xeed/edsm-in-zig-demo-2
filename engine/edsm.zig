@@ -27,7 +27,7 @@ pub const StageMachine = struct {
     allocator: Allocator,
     data: ?*anyopaque = null,
 
-    const StageMachineError = error {
+    const Error = error {
         IsAlreadyRunning,
         HasNoStates,
     };
