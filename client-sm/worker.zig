@@ -143,7 +143,9 @@ pub const Worker = struct {
         _ = src;
         _ = dptr;
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
-        print("{s} : can not connect to '{s}:{}'\n", .{me.name, pd.host, pd.port});
+        os.getsockoptError(pd.io.id) catch |err| {
+            print("{s} : can not connect to '{s}:{}': {}\n", .{me.name, pd.host, pd.port, err});
+        };
         me.msgTo(me, M3_WAIT, null);
     }
 
