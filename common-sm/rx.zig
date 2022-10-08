@@ -114,7 +114,7 @@ pub const RxPotBoy = struct {
             return;
         }
 
-        const br = std.os.read(io.id, pd.ctx.buf[pd.ctx.cnt..]) catch {
+        const br = os.read(io.id, pd.ctx.buf[pd.ctx.cnt..]) catch {
             me.msgTo(me, M0_IDLE, null);
             me.msgTo(pd.customer, M2_FAIL, null);
             return;
