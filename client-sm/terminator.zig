@@ -18,7 +18,6 @@ const edsm = @import("../engine/edsm.zig");
 const StageMachine = edsm.StageMachine;
 const Stage = StageMachine.Stage;
 const Reflex = Stage.Reflex;
-const StageList = edsm.StageList;
 
 const utils = @import("../utils.zig");
 
