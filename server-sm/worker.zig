@@ -12,8 +12,6 @@ const MessageQueue = MessageDispatcher.MessageQueue;
 const Message = MessageQueue.Message;
 
 const esrc = @import("../engine//event-sources.zig");
-const EventSourceKind = esrc.EventSourceKind;
-const EventSourceSubKind = esrc.EventSourceSubKind;
 const EventSource = esrc.EventSource;
 
 const edsm = @import("../engine/edsm.zig");
