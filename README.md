@@ -291,7 +291,7 @@ TX-1 @ IDLE got 'M0' from SELF
 TX-1 @ WORK got 'D2' from OS
 TX-1 @ WORK got 'M0' from SELF
 WORKER-1 @ CONN got 'M2' from TX-1
-WORKER-1 : can not connect to '127.0.0.1:3333'
+WORKER-1 : can not connect to '127.0.0.1:3333': error.ConnectionRefused
 WORKER-1 @ CONN got 'M3' from SELF
 ```
 
