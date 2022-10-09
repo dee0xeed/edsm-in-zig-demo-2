@@ -17,22 +17,13 @@ const AboutTimer= EventSource.AboutTimer;
 pub const StageMachine = struct {
 
     const Self = @This();
-
-    name: []const u8 = undefined,
-    namebuf: [32]u8 = undefined,
-    is_running: bool = false,
-    stages: StageList,
-    current_stage: *Stage = undefined,
-    md: *MessageDispatcher,
-    allocator: Allocator,
-    data: ?*anyopaque = null,
+    const StageList = std.ArrayList(StageMachine.Stage);
 
     const Error = error {
         IsAlreadyRunning,
         HasNoStates,
     };
-
-    const StageList = std.ArrayList(StageMachine.Stage);
+    
     pub const Stage = struct {
 
         const reactFnPtr = *const fn(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void;
@@ -87,6 +78,15 @@ pub const StageMachine = struct {
             self.reflexes[row][col] = refl;
         }
     };
+
+    name: []const u8 = undefined,
+    namebuf: [32]u8 = undefined,
+    is_running: bool = false,
+    stages: StageList,
+    current_stage: *Stage = undefined,
+    md: *MessageDispatcher,
+    allocator: Allocator,
+    data: ?*anyopaque = null,
 
     pub fn init(a: Allocator, md: *MessageDispatcher) StageMachine {
         return StageMachine {
