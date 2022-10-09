@@ -18,12 +18,12 @@ pub const StageMachine = struct {
 
     const Self = @This();
     const StageList = std.ArrayList(StageMachine.Stage);
-
     const Error = error {
         IsAlreadyRunning,
         HasNoStates,
+        StageHasNoReflexes,
     };
-    
+
     pub const Stage = struct {
 
         const reactFnPtr = *const fn(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void;
@@ -186,6 +186,24 @@ pub const StageMachine = struct {
             return error.HasNoStates;
         if (self.is_running)
             return error.IsAlreadyRunning;
+
+        var k: u32 = 0;
+        while (k < self.stages.items.len) : (k += 1) {
+            const stage = &self.stages.items[k];
+            var row: u8 = 0;
+            var cnt: u8 = 0;
+            while (row < Stage.nrows) : (row += 1) {
+                var col: u8 = 0;
+                while (col < Stage.ncols) : (col += 1) {
+                    if (stage.reflexes[row][col] != null)
+                        cnt += 1;
+                }
+            }
+            if (0 == cnt) {
+                print("stage '{s}' of '{s}' has no reflexes\n", .{stage.name, self.name});
+                return error.StageHasNoReflexes;
+            }
+        }
 
         self.current_stage = &self.stages.items[0];
         if (self.current_stage.enter) |hello| {
