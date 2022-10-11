@@ -19,11 +19,6 @@ const edsm = @import("edsm.zig");
 const StageMachine = edsm.StageMachine;
 const ecap = @import("event-capture.zig");
 
-//pub const ClientSocket = struct {
-//    fd: i32,
-//    addr: net.Address,
-//};
-
 pub const EventSource = struct {
 
     const Self = @This();

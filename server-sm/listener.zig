@@ -75,7 +75,6 @@ pub const Listener = struct {
         pd.io0.enable(&me.md.eq, .{}) catch unreachable;
         pd.sg0.enable(&me.md.eq, .{}) catch unreachable;
         pd.sg1.enable(&me.md.eq, .{}) catch unreachable;
-        print("\nHello! I am '{s}' on port {}.\n", .{me.name, pd.port});
     }
 
     // incoming connection
@@ -118,6 +117,6 @@ pub const Listener = struct {
     fn workLeave(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *ListenerData);
         pd.io0.disable(&me.md.eq) catch unreachable;
-        print("Bye! It was '{s}'.\n", .{me.name});
+        print("Bye!\n", .{});
     }
 };
