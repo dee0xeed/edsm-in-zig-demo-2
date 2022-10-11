@@ -14,7 +14,22 @@ const TxPotBoy = @import("common-sm/tx.zig").TxPotBoy;
 
 pub fn main() !void {
 
-    const nconnections = 4;
+    var nconnections:u16 = 4;
+    var host: []u8 = undefined;
+    var port: u16 = undefined;
+
+    if (4 != std.os.argv.len) {
+        print("Usage: {s} <host> <port> <connections>\n", .{std.os.argv[0]});
+        return;
+    }
+
+    const a1 = std.mem.sliceTo(std.os.argv[1], 0);
+    host = a1;
+    const a2 = std.mem.sliceTo(std.os.argv[2], 0);
+    port = std.fmt.parseInt(u16, a2, 10) catch 3333;
+    const a3 = std.mem.sliceTo(std.os.argv[3], 0);
+    nconnections = std.fmt.parseInt(u16, a3, 10) catch 4;
+
     var arena = ArenaAllocator.init(page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -37,7 +52,7 @@ pub fn main() !void {
 
     i = 0;
     while (i < nconnections) : (i += 1) {
-        var w = try Worker.onHeap(allocator, &md, &rx_pool, &tx_pool, "127.0.0.1", 3333);
+        var w = try Worker.onHeap(allocator, &md, &rx_pool, &tx_pool, host, port);
         try w.run();
     }
 
