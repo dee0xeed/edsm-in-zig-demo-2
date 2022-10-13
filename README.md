@@ -32,11 +32,11 @@ Each event source has an owner (it is some state machine).
 
 ### Event/messages notation
 
-* M0, M1, M2 ... - internal messages
-* S0, S1, S2 ... - signals
-* T0, T1, T2 ... - timers
-* DO, D1, D2     - i/o ('can read', 'can write', 'error')
-* F0, F1, F2 ... - file system ('writable file was closed' and alike)
+* `M0, M1, M2 ...` - internal messages
+* `S0, S1, S2 ...` - signals
+* `T0, T1, T2 ...` - timers
+* `DO, D1, D2    ` - i/o ('can read', 'can write', 'error')
+* `F0, F1, F2 ...` - file system ('writable file was closed' and alike)
 
 These 'tags' are used in the names of state machines 'methods', for example:
 
