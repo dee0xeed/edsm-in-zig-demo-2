@@ -41,10 +41,8 @@ Each event source has an owner (it is some state machine).
 These 'tags' are used in the names of state machines 'methods', for example:
 
 ```zig
-    fn workD2(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
-        _ = src;
-        _ = data;
-        var pd = @ptrCast(*TxData, @alignCast(@alignOf(*TxData), me.data));
+    fn workD2(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
+        var pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
     }

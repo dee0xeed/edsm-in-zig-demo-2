@@ -128,9 +128,7 @@ pub const RxPotBoy = struct {
         me.msgTo(pd.customer, M1_DONE, null);
     }
 
-    fn workD2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
-        _ = dptr;
+    fn workD2(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
         var pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
