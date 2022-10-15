@@ -93,8 +93,7 @@ pub const TxPotBoy = struct {
         pd.io0.enableOut(&me.md.eq) catch unreachable;
     }
 
-    fn workD1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
+    fn workD1(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
         var io = utils.opaqPtrTo(dptr, *EventSource);
         var pd = utils.opaqPtrTo(me.data, *TxData);
 
@@ -121,9 +120,7 @@ pub const TxPotBoy = struct {
         me.msgTo(pd.customer, M1_DONE, null);
     }
 
-    fn workD2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
-        _ = dptr;
+    fn workD2(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
         var pd = utils.opaqPtrTo(me.data, *TxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);

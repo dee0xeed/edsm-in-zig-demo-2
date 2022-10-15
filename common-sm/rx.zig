@@ -99,8 +99,7 @@ pub const RxPotBoy = struct {
         pd.io0.enable(&me.md.eq, .{}) catch unreachable;
     }
 
-    fn workD0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
+    fn workD0(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
         var io = utils.opaqPtrTo(dptr, *EventSource);
         var pd = utils.opaqPtrTo(me.data, *RxData);
 
@@ -135,9 +134,7 @@ pub const RxPotBoy = struct {
     }
 
     // timeout
-    fn workT0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
-        _ = dptr;
+    fn workT0(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
         var pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
