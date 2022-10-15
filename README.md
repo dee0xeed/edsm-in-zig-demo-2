@@ -56,7 +56,7 @@ when leaving `WORK` state:
 
 ```zig
     fn workLeave(me: *StageMachine) void {
-        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+        var pd = utils.opaqPtrTo(me.data, *RxData);
         pd.tm0.disable(&me.md.eq) catch unreachable;
     }
 ```
