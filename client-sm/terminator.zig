@@ -58,8 +58,7 @@ pub const Terminator = struct {
         pd.sg1.enable(&me.md.eq, .{}) catch unreachable;
     }
 
-    fn idleS0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
+    fn idleS0(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
         var sg = utils.opaqPtrTo(dptr, *EventSource);
         var si = sg.info.sg.sig_info;
         print("got signal #{} from PID {}\n", .{si.signo, si.pid});

@@ -78,8 +78,7 @@ pub const Listener = struct {
     }
 
     // incoming connection
-    fn workD0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
+    fn workD0(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
         var pd = utils.opaqPtrTo(me.data, *ListenerData);
         var io = utils.opaqPtrTo(dptr, *EventSource);
         io.enable(&me.md.eq, .{}) catch unreachable;
@@ -99,15 +98,13 @@ pub const Listener = struct {
 
     // message from worker machine (client gone)
     // or from self (if no workers were available)
-    fn workM0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
+    fn workM0(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
         var client = utils.opaqPtrTo(dptr, *Client);
         os.close(client.fd);
         me.allocator.destroy(client);
     }
 
-    fn workS0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
+    fn workS0(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
         var sg = utils.opaqPtrTo(dptr, *EventSource);
         var si = sg.info.sg.sig_info;
         print("got signal #{} from PID {}\n", .{si.signo, si.pid});

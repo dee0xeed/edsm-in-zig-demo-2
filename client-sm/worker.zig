@@ -127,18 +127,14 @@ pub const Worker = struct {
     }
 
     // message from TX machine, connection established
-    fn connM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
-        _ = dptr;
+    fn connM1(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
         print("{s} : connected to '{s}:{}'\n", .{me.name, pd.host, pd.port});
         me.msgTo(me, M0_SEND, null);
     }
 
     // message from TX machine, can't connect
-    fn connM2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
-        _ = dptr;
+    fn connM2(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
         os.getsockoptError(pd.io.id) catch |err| {
             print("{s} : can not connect to '{s}:{}': {}\n", .{me.name, pd.host, pd.port, err});
@@ -158,16 +154,12 @@ pub const Worker = struct {
     }
 
     // message from TX machine (success)
-    fn sendM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
-        _ = dptr;
+    fn sendM1(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
         me.msgTo(me, M0_RECV, null);
     }
 
     // message from TX machine (failure)
-    fn sendM2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        _ = src;
-        _ = dptr;
+    fn sendM2(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
         me.msgTo(me, M3_WAIT, null);
     }
 
@@ -190,20 +182,14 @@ pub const Worker = struct {
     }
 
     // message from RX machine (success)
-    fn recvM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+    fn recvM1(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
-        _ = dptr;
-        _ = src;
         print("reply: {s}", .{pd.reply[0..pd.ctx.cnt]});
         me.msgTo(me, M0_TWIX, null);
     }
 
     // message from RX machine (failure)
-    fn recvM2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        var pd = utils.opaqPtrTo(me.data, *WorkerData);
-        _ = pd;
-        _ = dptr;
-        _ = src;
+    fn recvM2(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
         me.msgTo(me, M3_WAIT, null);
     }
 
