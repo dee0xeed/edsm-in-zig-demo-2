@@ -12,24 +12,12 @@ const TxPotBoy = @import("common-sm/tx.zig").TxPotBoy;
 
 pub fn main() !void {
 
-    var max_clients: u16 = undefined;
-    var port: u16 = undefined;
-
-    if (3 != std.os.argv.len) {
-        print("Usage: {s} <port> <max_clients>\n", .{std.os.argv[0]});
-        return;
-    }
-
-    const a1 = std.mem.sliceTo(std.os.argv[1], 0);
-    port = std.fmt.parseInt(u16, a1, 10) catch 3333;
-    const a2 = std.mem.sliceTo(std.os.argv[2], 0);
-    max_clients = std.fmt.parseInt(u16, a2, 10) catch 4;
-
+    const max_clients = 4;
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     //defer print("leakage?.. {}\n", .{gpa.deinit()});
     const allocator = gpa.allocator();
-
     var md = try MessageDispatcher.onStack(allocator, 5);
+
     var worker_pool = try MachinePool.init(allocator, max_clients);
     var rx_pool = try MachinePool.init(allocator, max_clients);
     var tx_pool = try MachinePool.init(allocator, max_clients);
@@ -52,11 +40,9 @@ pub fn main() !void {
         try worker.run();
     }
 
-    var reception = try Listener.onHeap(allocator, &md, port, &worker_pool);
+    var reception = try Listener.onHeap(allocator, &md, 3333, &worker_pool);
     try reception.run();
-    print("Listening on port {}, max number of clients is {}\n", .{port, max_clients});
 
     try md.loop();
     md.eq.fini();
-
 }

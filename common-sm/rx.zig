@@ -12,12 +12,15 @@ const MessageQueue = MessageDispatcher.MessageQueue;
 const Message = MessageQueue.Message;
 
 const esrc = @import("../engine/event-sources.zig");
+const EventSourceKind = esrc.EventSourceKind;
+const EventSourceSubKind = esrc.EventSourceSubKind;
 const EventSource = esrc.EventSource;
 
 const edsm = @import("../engine/edsm.zig");
 const StageMachine = edsm.StageMachine;
 const Stage = StageMachine.Stage;
 const Reflex = Stage.Reflex;
+const StageList = edsm.StageList;
 
 const MachinePool = @import("../machine-pool.zig").MachinePool;
 const Context =  @import("../common-sm/context.zig").IoContext;
@@ -92,14 +95,15 @@ pub const RxPotBoy = struct {
     }
 
     fn workEnter(me: *StageMachine) void {
-        var pd = @ptrCast(*RxData, @alignCast(@alignOf(*RxData), me.data));
+        var pd: *RxData = @ptrCast(@alignCast(me.data));
         pd.ctx.cnt = 0;
         const to = if (0 == pd.ctx.timeout) 1000 else pd.ctx.timeout;
         pd.tm0.enable(&me.md.eq, .{to}) catch unreachable;
         pd.io0.enable(&me.md.eq, .{}) catch unreachable;
     }
 
-    fn workD0(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
+    fn workD0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        _ = src;
         var io = utils.opaqPtrTo(dptr, *EventSource);
         var pd = utils.opaqPtrTo(me.data, *RxData);
 
@@ -110,7 +114,7 @@ pub const RxPotBoy = struct {
             return;
         }
 
-        const br = os.read(io.id, pd.ctx.buf[pd.ctx.cnt..]) catch {
+        const br = std.os.read(io.id, pd.ctx.buf[pd.ctx.cnt..]) catch {
             me.msgTo(me, M0_IDLE, null);
             me.msgTo(pd.customer, M2_FAIL, null);
             return;
@@ -127,14 +131,18 @@ pub const RxPotBoy = struct {
         me.msgTo(pd.customer, M1_DONE, null);
     }
 
-    fn workD2(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
+    fn workD2(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+        _ = src;
+        _ = data;
         var pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
     }
 
     // timeout
-    fn workT0(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
+    fn workT0(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+        _ = src;
+        _ = data;
         var pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);

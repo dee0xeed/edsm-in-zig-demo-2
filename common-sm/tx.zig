@@ -12,12 +12,15 @@ const MessageQueue = MessageDispatcher.MessageQueue;
 const Message = MessageQueue.Message;
 
 const esrc = @import("../engine//event-sources.zig");
+const EventSourceKind = esrc.EventSourceKind;
+const EventSourceSubKind = esrc.EventSourceSubKind;
 const EventSource = esrc.EventSource;
 
 const edsm = @import("../engine/edsm.zig");
 const StageMachine = edsm.StageMachine;
 const Stage = StageMachine.Stage;
 const Reflex = Stage.Reflex;
+const StageList = edsm.StageList;
 
 const MachinePool = @import("../machine-pool.zig").MachinePool;
 const Context =  @import("../common-sm/context.zig").IoContext;
@@ -93,7 +96,8 @@ pub const TxPotBoy = struct {
         pd.io0.enableOut(&me.md.eq) catch unreachable;
     }
 
-    fn workD1(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
+    fn workD1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        _ = src;
         var io = utils.opaqPtrTo(dptr, *EventSource);
         var pd = utils.opaqPtrTo(me.data, *TxData);
 
@@ -104,7 +108,7 @@ pub const TxPotBoy = struct {
             return;
         } 
 
-        const bw = os.write(io.id, pd.ctx.buf[pd.ctx.buf.len - pd.ctx.cnt..pd.ctx.buf.len]) catch {
+        const bw = std.os.write(io.id, pd.ctx.buf[pd.ctx.buf.len - pd.ctx.cnt..pd.ctx.buf.len]) catch {
             me.msgTo(me, M0_IDLE, null);
             me.msgTo(pd.customer, M2_FAIL, null);
             return;
@@ -120,7 +124,9 @@ pub const TxPotBoy = struct {
         me.msgTo(pd.customer, M1_DONE, null);
     }
 
-    fn workD2(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
+    fn workD2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        _ = src;
+        _ = dptr;
         var pd = utils.opaqPtrTo(me.data, *TxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);

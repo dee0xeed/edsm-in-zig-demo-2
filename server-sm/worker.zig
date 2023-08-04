@@ -12,12 +12,15 @@ const MessageQueue = MessageDispatcher.MessageQueue;
 const Message = MessageQueue.Message;
 
 const esrc = @import("../engine//event-sources.zig");
+const EventSourceKind = esrc.EventSourceKind;
+const EventSourceSubKind = esrc.EventSourceSubKind;
 const EventSource = esrc.EventSource;
 
 const edsm = @import("../engine/edsm.zig");
 const StageMachine = edsm.StageMachine;
 const Stage = StageMachine.Stage;
 const Reflex = Stage.Reflex;
+const StageList = edsm.StageList;
 
 const MachinePool = @import("../machine-pool.zig").MachinePool;
 const Client = @import("client.zig").Client;
@@ -133,7 +136,11 @@ pub const Worker = struct {
     }
 
     // message from RX machine (success)
-    fn recvM1(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
+    fn recvM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+        var pd = utils.opaqPtrTo(me.data, *WorkerData);
+        _ = pd;
+        _ = data;
+        _ = src;
         me.msgTo(me, M0_SEND, null);
     }
 
@@ -148,7 +155,9 @@ pub const Worker = struct {
     }
 
     // message from TX machine (success)
-    fn sendM1(me: *StageMachine, _: ?*StageMachine, _: ?*anyopaque) void {
+    fn sendM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
+        _ = src;
+        _ = data;
         me.msgTo(me, M0_RECV, null);
     }
 

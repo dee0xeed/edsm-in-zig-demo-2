@@ -10,12 +10,15 @@ const MessageQueue = MessageDispatcher.MessageQueue;
 const Message = MessageQueue.Message;
 
 const esrc = @import("../engine//event-sources.zig");
+const EventSourceKind = esrc.EventSourceKind;
+const EventSourceSubKind = esrc.EventSourceSubKind;
 const EventSource = esrc.EventSource;
 
 const edsm = @import("../engine/edsm.zig");
 const StageMachine = edsm.StageMachine;
 const Stage = StageMachine.Stage;
 const Reflex = Stage.Reflex;
+const StageList = edsm.StageList;
 
 const utils = @import("../utils.zig");
 
@@ -47,8 +50,8 @@ pub const Terminator = struct {
 
     fn initEnter(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *TerminatorData);
-        me.initSignal(&pd.sg0, os.SIG.INT, Message.S0) catch unreachable;
-        me.initSignal(&pd.sg1, os.SIG.TERM, Message.S1) catch unreachable;
+        me.initSignal(&pd.sg0, std.os.SIG.INT, Message.S0) catch unreachable;
+        me.initSignal(&pd.sg1, std.os.SIG.TERM, Message.S1) catch unreachable;
         me.msgTo(me, M0_IDLE, null);
     }
 
@@ -58,7 +61,8 @@ pub const Terminator = struct {
         pd.sg1.enable(&me.md.eq, .{}) catch unreachable;
     }
 
-    fn idleS0(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
+    fn idleS0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        _ = src;
         var sg = utils.opaqPtrTo(dptr, *EventSource);
         var si = sg.info.sg.sig_info;
         print("got signal #{} from PID {}\n", .{si.signo, si.pid});

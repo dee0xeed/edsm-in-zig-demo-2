@@ -10,12 +10,15 @@ const MessageQueue = MessageDispatcher.MessageQueue;
 const Message = MessageQueue.Message;
 
 const esrc = @import("../engine//event-sources.zig");
+const EventSourceKind = esrc.EventSourceKind;
+const EventSourceSubKind = esrc.EventSourceSubKind;
 const EventSource = esrc.EventSource;
 
 const edsm = @import("../engine/edsm.zig");
 const StageMachine = edsm.StageMachine;
 const Stage = StageMachine.Stage;
 const Reflex = Stage.Reflex;
+const StageList = edsm.StageList;
 
 const MachinePool = @import("../machine-pool.zig").MachinePool;
 const Client = @import("client.zig").Client;
@@ -64,8 +67,8 @@ pub const Listener = struct {
 
     fn initEnter(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *ListenerData);
-        me.initSignal(&pd.sg0, os.SIG.INT, Message.S0) catch unreachable;
-        me.initSignal(&pd.sg1, os.SIG.TERM, Message.S1) catch unreachable;
+        me.initSignal(&pd.sg0, std.os.SIG.INT, Message.S0) catch unreachable;
+        me.initSignal(&pd.sg1, std.os.SIG.TERM, Message.S1) catch unreachable;
         me.initListener(&pd.io0, pd.port) catch unreachable;
         me.msgTo(me, M0_WORK, null);
     }
@@ -75,16 +78,18 @@ pub const Listener = struct {
         pd.io0.enable(&me.md.eq, .{}) catch unreachable;
         pd.sg0.enable(&me.md.eq, .{}) catch unreachable;
         pd.sg1.enable(&me.md.eq, .{}) catch unreachable;
+        print("\nHello! I am '{s}' on port {}.\n", .{me.name, pd.port});
     }
 
     // incoming connection
-    fn workD0(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
+    fn workD0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        _ = src;
         var pd = utils.opaqPtrTo(me.data, *ListenerData);
         var io = utils.opaqPtrTo(dptr, *EventSource);
         io.enable(&me.md.eq, .{}) catch unreachable;
         const fd = io.acceptClient() catch unreachable;
         var ptr = me.allocator.create(Client) catch unreachable;
-        var client = @ptrCast(*Client, @alignCast(@alignOf(*Client), ptr));
+        var client: *Client = @ptrCast(@alignCast(ptr));
         client.fd = fd;
         // client.
 
@@ -98,13 +103,15 @@ pub const Listener = struct {
 
     // message from worker machine (client gone)
     // or from self (if no workers were available)
-    fn workM0(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
+    fn workM0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        _ = src;
         var client = utils.opaqPtrTo(dptr, *Client);
         os.close(client.fd);
         me.allocator.destroy(client);
     }
 
-    fn workS0(me: *StageMachine, _: ?*StageMachine, dptr: ?*anyopaque) void {
+    fn workS0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
+        _ = src;
         var sg = utils.opaqPtrTo(dptr, *EventSource);
         var si = sg.info.sg.sig_info;
         print("got signal #{} from PID {}\n", .{si.signo, si.pid});
@@ -114,6 +121,6 @@ pub const Listener = struct {
     fn workLeave(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *ListenerData);
         pd.io0.disable(&me.md.eq) catch unreachable;
-        print("Bye!\n", .{});
+        print("Bye! It was '{s}'.\n", .{me.name});
     }
 };

@@ -19,9 +19,20 @@ const edsm = @import("edsm.zig");
 const StageMachine = edsm.StageMachine;
 const ecap = @import("event-capture.zig");
 
+//pub const ClientSocket = struct {
+//    fd: i32,
+//    addr: net.Address,
+//};
+
 pub const EventSource = struct {
 
     const Self = @This();
+    kind: Kind,
+    subkind: SubKind,
+    id: i32 = -1, // fd in most cases, but not always
+    owner: *StageMachine,
+    seqn: u4 = 0,
+    info: Info,
 
     pub const Kind = enum {
         sm, // state machine
@@ -31,7 +42,7 @@ pub const EventSource = struct {
         fs, // file system
     };
 
-    /// this is for i/o kind, for other kinds must be set to 'none'
+    /// this is for i/o kind, for other kind must be set to 'none'
     pub const SubKind = enum {
         none,
         ssock,  // listening TCP socket
@@ -58,13 +69,6 @@ pub const EventSource = struct {
         tm: AboutTimer,
         fs: void,
     };
-
-    kind: Kind,
-    subkind: SubKind,
-    id: i32 = -1, // fd in most cases, but not always
-    owner: *StageMachine,
-    seqn: u4 = 0,
-    info: Info,
 
     pub fn init(
         owner: *StageMachine,
@@ -138,15 +142,15 @@ pub const EventSource = struct {
     }
 
     fn getSignalId(signo: u6) !i32 {
-        var sset: SigSet = os.empty_sigset;
+        var sset: SigSet = std.os.empty_sigset;
         // block the signal
-        os.linux.sigaddset(&sset, signo);
+        std.os.linux.sigaddset(&sset, signo);
         sigProcMask(SIG.BLOCK, &sset, null);
         return signalFd(-1, &sset, 0);
     }
 
     fn getTimerId() !i32 {
-        return try timerFd(os.CLOCK.REALTIME, 0);
+        return try timerFd(std.os.CLOCK.REALTIME, 0);
     }
 
     /// obtain fd from OS
@@ -155,7 +159,7 @@ pub const EventSource = struct {
             .io => try getIoId(self.subkind, args),
             .sg => blk: {
                 if (1 != args.len) unreachable;
-                const signo = @intCast(u6, args[0]);
+                const signo: u6 = @intCast(args[0]);
                 break :blk try getSignalId(signo);
             },
             .tm => if (0 == args.len) try getTimerId() else unreachable,
@@ -202,9 +206,9 @@ pub const EventSource = struct {
             .tm => &self.info.tm.nexp,
             else => unreachable,
         };
-        var p2 = @ptrCast([*]u8, @alignCast(@alignOf([*]u8), p1));
+        var p2: [*]u8 = @ptrCast(@alignCast(p1));
         var buf = p2[0..@sizeOf(AboutTimer)];
-        _ = try os.read(self.id, buf[0..]);
+        _ = try std.os.read(self.id, buf[0..]);
     }
 
     fn readSignalInfo(self: *Self) !void {
@@ -212,9 +216,9 @@ pub const EventSource = struct {
             .sg => &self.info.sg.sig_info,
             else => unreachable,
         };
-        var p2 = @ptrCast([*]u8, @alignCast(@alignOf([*]u8), p1));
+        var p2: [*]u8 = @ptrCast(@alignCast(p1));
         var buf = p2[0..@sizeOf(SigInfo)];
-        _ = try os.read(self.id, buf[0..]);
+        _ = try std.os.read(self.id, buf[0..]);
     }
 
     pub fn readInfo(self: *Self) !void {

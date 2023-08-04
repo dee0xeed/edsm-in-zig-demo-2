@@ -9,11 +9,19 @@ const esrc = @import("event-sources.zig");
 pub const MessageDispatcher = struct {
 
     const Self = @This();
+    mq: *MessageQueue,
+    eq: ecap.EventQueue,
 
     /// Ring buffer (non-growable) that holds messages
     pub const MessageQueue = struct {
 
         const MQ = @This();
+        cap: u32,
+        storage: []Message,
+        index_mask: u32,
+        r_index: u32,
+        w_index: u32,
+        n_items: u32,
 
         pub const Error = error {
             IsFull,
@@ -67,16 +75,9 @@ pub const MessageDispatcher = struct {
             ptr: ?*anyopaque,
         };
 
-        cap: u32,
-        storage: []Message,
-        index_mask: u32,
-        r_index: u32,
-        w_index: u32,
-        n_items: u32,
-
         pub fn onHeap(a: Allocator, order: u5) !*MessageQueue {
             var mq = try a.create(MessageQueue);
-            mq.cap = @intCast(u32, 1) << order;
+            mq.cap = @as(u32, 1) << order;
             mq.storage = try a.alloc(Message, mq.cap);
             mq.index_mask = mq.cap - 1;
             mq.r_index = 0;
@@ -86,7 +87,7 @@ pub const MessageDispatcher = struct {
         }
 
         pub fn onStack(a: Allocator, order: u5) !MessageQueue {
-            const cap = @intCast(u32, 1) << order;
+            const cap = @as(u32, 1) << order;
             const buf = try a.alloc(Message, cap);
             return MessageQueue {
                 .cap = cap,
@@ -94,7 +95,7 @@ pub const MessageDispatcher = struct {
                 .index_mask = cap - 1,
                 .r_index = 0,
                 .w_index = cap - 1,
-                .n_items = 0,
+               .n_items = 0,
             };
         }
 
@@ -115,9 +116,6 @@ pub const MessageDispatcher = struct {
             return item;
         }
     };
-
-    mq: *MessageQueue,
-    eq: ecap.EventQueue,
 
     pub fn onStack(a: Allocator, mq_cap_order: u5) !MessageDispatcher {
         var mq = try MessageQueue.onHeap(a, mq_cap_order);

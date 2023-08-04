@@ -17,13 +17,22 @@ const AboutTimer= EventSource.AboutTimer;
 pub const StageMachine = struct {
 
     const Self = @This();
-    const StageList = std.ArrayList(StageMachine.Stage);
-    const Error = error {
+
+    name: []const u8 = undefined,
+    namebuf: [32]u8 = undefined,
+    is_running: bool = false,
+    stages: StageList,
+    current_stage: *Stage = undefined,
+    md: *MessageDispatcher,
+    allocator: Allocator,
+    data: ?*anyopaque = null,
+
+    const StageMachineError = error {
         IsAlreadyRunning,
         HasNoStates,
-        StageHasNoReflexes,
     };
 
+    const StageList = std.ArrayList(StageMachine.Stage);
     pub const Stage = struct {
 
         const reactFnPtr = *const fn(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void;
@@ -69,7 +78,7 @@ pub const StageMachine = struct {
         sm: *StageMachine = undefined,
 
         pub fn setReflex(self: *Stage, esk: EventSource.Kind, seqn: u4, refl: Reflex) void {
-            const row: u8 = @enumToInt(esk);
+            const row: u8 = @intFromEnum(esk);
             const col: u8 = seqn;
             if (self.reflexes[row][col]) |_| {
                 print("{s}/{s} already has relfex for '{c}{}'\n", .{self.sm.name, self.name, esk_tags[row], seqn});
@@ -78,15 +87,6 @@ pub const StageMachine = struct {
             self.reflexes[row][col] = refl;
         }
     };
-
-    name: []const u8 = undefined,
-    namebuf: [32]u8 = undefined,
-    is_running: bool = false,
-    stages: StageList,
-    current_stage: *Stage = undefined,
-    md: *MessageDispatcher,
-    allocator: Allocator,
-    data: ?*anyopaque = null,
 
     pub fn init(a: Allocator, md: *MessageDispatcher) StageMachine {
         return StageMachine {
@@ -134,7 +134,7 @@ pub const StageMachine = struct {
 
     /// state machine engine
     pub fn reactTo(self: *Self, msg: Message) void {
-        const row = @enumToInt(msg.esk);
+        const row: u8 = @intFromEnum(msg.esk);
         const col = msg.sqn;
         const current_stage = self.current_stage;
 
@@ -186,24 +186,6 @@ pub const StageMachine = struct {
             return error.HasNoStates;
         if (self.is_running)
             return error.IsAlreadyRunning;
-
-        var k: u32 = 0;
-        while (k < self.stages.items.len) : (k += 1) {
-            const stage = &self.stages.items[k];
-            var row: u8 = 0;
-            var cnt: u8 = 0;
-            while (row < Stage.nrows) : (row += 1) {
-                var col: u8 = 0;
-                while (col < Stage.ncols) : (col += 1) {
-                    if (stage.reflexes[row][col] != null)
-                        cnt += 1;
-                }
-            }
-            if (0 == cnt) {
-                print("stage '{s}' of '{s}' has no reflexes\n", .{stage.name, self.name});
-                return error.StageHasNoReflexes;
-            }
-        }
 
         self.current_stage = &self.stages.items[0];
         if (self.current_stage.enter) |hello| {

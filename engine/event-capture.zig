@@ -1,14 +1,13 @@
 
 const std = @import("std");
-const os = std.os;
 const print = std.debug.print;
-const EpollEvent = os.linux.epoll_event;
-const EpollData = os.linux.epoll_data;
-const epollCreate = os.epoll_create1;
-const epollCtl = os.epoll_ctl;
-const epollWait = os.epoll_wait;
-const EPOLL = os.linux.EPOLL;
-const ioctl = os.linux.ioctl;
+const EpollEvent = std.os.linux.epoll_event;
+const EpollData = std.os.linux.epoll_data;
+const epollCreate = std.os.epoll_create1;
+const epollCtl = std.os.epoll_ctl;
+const epollWait = std.os.epoll_wait;
+const EPOLL = std.os.linux.EPOLL;
+const ioctl = std.os.linux.ioctl;
 
 const msgq = @import("message-queue.zig");
 const MD = msgq.MessageDispatcher;
@@ -36,12 +35,12 @@ pub const EventQueue = struct {
     }
 
     pub fn fini(self: *EventQueue) void {
-        os.close(self.fd);
+        std.os.close(self.fd);
     }
 
     fn getIoEventInfo(es: *EventSource, events: u32) !u4 {
 
-        const FIONREAD = os.linux.T.FIONREAD;
+        const FIONREAD = std.os.linux.T.FIONREAD;
         if (0 != events & (EPOLL.ERR | EPOLL.HUP | EPOLL.RDHUP)) {
             return Message.D2;
         }
@@ -51,7 +50,7 @@ pub const EventQueue = struct {
 
         if (0 != events & EPOLL.IN) {
             var ba: u32 = 0;
-            _ = ioctl(es.id, FIONREAD, @ptrToInt(&ba)); // IOCINQ
+            _ = ioctl(es.id, FIONREAD, @intFromPtr(&ba)); // IOCINQ
             // see https://github.com/ziglang/zig/issues/12961
             es.info.io.bytes_avail = ba;
             return Message.D0;
@@ -82,7 +81,7 @@ pub const EventQueue = struct {
         const n = epollWait(self.fd, events[0..], wait_forever);
 
         for (events[0..n]) |ev| {
-            const es = @intToPtr(*EventSource, ev.data.ptr);
+            const es: *EventSource = @ptrFromInt(ev.data.ptr);
             const seqn = try getEventInfo(es, ev.events);
             const msg = Message {
                 .src = null,
@@ -102,13 +101,13 @@ pub const EventQueue = struct {
 
     fn enableEventSource(self: *EventQueue, es: *EventSource, ek: EventKind) !void {
 
-        const FdAlreadyInSet = os.EpollCtlError.FileDescriptorAlreadyPresentInSet;
+        const FdAlreadyInSet = std.os.EpollCtlError.FileDescriptorAlreadyPresentInSet;
         var em: u32 = if (.can_read == ek) (EPOLL.IN | EPOLL.RDHUP) else EPOLL.OUT;
         em |= EPOLL.ONESHOT;
 
         var ee = EpollEvent {
             .events = em,
-            .data = EpollData{.ptr = @ptrToInt(es)},
+            .data = EpollData{.ptr = @intFromPtr(es)},
         };
 
         // emulate FreeBSD kqueue behavior
@@ -123,7 +122,7 @@ pub const EventQueue = struct {
     pub fn disableEventSource(self: *EventQueue, es: *EventSource) !void {
         var ee = EpollEvent {
             .events = 0,
-            .data = EpollData{.ptr = @ptrToInt(es)},
+            .data = EpollData{.ptr = @intFromPtr(es)},
         };
         try epollCtl(self.fd, EPOLL.CTL_MOD, es.id, &ee);
     }
