@@ -114,7 +114,7 @@ pub const RxPotBoy = struct {
             return;
         }
 
-        const br = std.os.read(io.id, pd.ctx.buf[pd.ctx.cnt..]) catch {
+        const br = std.posix.read(io.id, pd.ctx.buf[pd.ctx.cnt..]) catch {
             me.msgTo(me, M0_IDLE, null);
             me.msgTo(pd.customer, M2_FAIL, null);
             return;
@@ -134,7 +134,7 @@ pub const RxPotBoy = struct {
     fn workD2(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
         _ = src;
         _ = data;
-        var pd = utils.opaqPtrTo(me.data, *RxData);
+        const pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
     }
@@ -143,7 +143,7 @@ pub const RxPotBoy = struct {
     fn workT0(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
         _ = src;
         _ = data;
-        var pd = utils.opaqPtrTo(me.data, *RxData);
+        const pd = utils.opaqPtrTo(me.data, *RxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
     }

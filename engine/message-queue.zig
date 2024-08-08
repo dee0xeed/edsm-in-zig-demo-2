@@ -109,7 +109,7 @@ pub const MessageDispatcher = struct {
 
         pub fn get(self: *MQ) ?Message {
             if (0 == self.n_items) return null;
-            var item = self.storage[self.r_index];
+            const item = self.storage[self.r_index];
             self.n_items -= 1;
             self.r_index += 1;
             self.r_index &= self.index_mask;
@@ -118,8 +118,8 @@ pub const MessageDispatcher = struct {
     };
 
     pub fn onStack(a: Allocator, mq_cap_order: u5) !MessageDispatcher {
-        var mq = try MessageQueue.onHeap(a, mq_cap_order);
-        var eq = try ecap.EventQueue.onStack(mq);
+        const mq = try MessageQueue.onHeap(a, mq_cap_order);
+        const eq = try ecap.EventQueue.onStack(mq);
         return MessageDispatcher {
             .mq = mq,
             .eq = eq,

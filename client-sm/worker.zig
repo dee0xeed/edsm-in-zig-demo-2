@@ -118,7 +118,7 @@ pub const Worker = struct {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
         pd.io.getId(.{}) catch unreachable;
 
-        var tx = pd.txp.get() orelse {
+        const tx = pd.txp.get() orelse {
             me.msgTo(me, M3_WAIT, null);
             return;
         };
@@ -133,7 +133,7 @@ pub const Worker = struct {
     fn connM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
         _ = dptr;
-        var pd = utils.opaqPtrTo(me.data, *WorkerData);
+        const pd = utils.opaqPtrTo(me.data, *WorkerData);
         print("{s} : connected to '{s}:{}'\n", .{me.name, pd.host, pd.port});
         me.msgTo(me, M0_SEND, null);
     }
@@ -142,14 +142,14 @@ pub const Worker = struct {
     fn connM2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
         _ = dptr;
-        var pd = utils.opaqPtrTo(me.data, *WorkerData);
+        const pd = utils.opaqPtrTo(me.data, *WorkerData);
         print("{s} : can not connect to '{s}:{}'\n", .{me.name, pd.host, pd.port});
         me.msgTo(me, M3_WAIT, null);
     }
 
     fn sendEnter(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
-        var tx = pd.txp.get() orelse {
+        const tx = pd.txp.get() orelse {
             me.msgTo(me, M3_WAIT, null);
             return;
         };
@@ -180,7 +180,7 @@ pub const Worker = struct {
 
     fn recvEnter(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
-        var rx = pd.rxp.get() orelse {
+        const rx = pd.rxp.get() orelse {
             me.msgTo(me, M3_WAIT, null);
             return;
         };
@@ -201,7 +201,7 @@ pub const Worker = struct {
 
     // message from RX machine (failure)
     fn recvM2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
-        var pd = utils.opaqPtrTo(me.data, *WorkerData);
+        const pd = utils.opaqPtrTo(me.data, *WorkerData);
         _ = pd;
         _ = dptr;
         _ = src;
@@ -215,7 +215,7 @@ pub const Worker = struct {
 
     fn waitEnter(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
-        os.close(pd.io.id);
+        std.posix.close(pd.io.id);
         pd.tm.enable(&me.md.eq, .{5000}) catch unreachable;
     }
 };

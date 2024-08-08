@@ -4,15 +4,15 @@ const os = std.os;
 const mem = std.mem;
 const net = std.net;
 
-const timerFd = os.timerfd_create;
-const timerFdSetTime = os.timerfd_settime;
+const timerFd = std.posix.timerfd_create;
+const timerFdSetTime = std.posix.timerfd_settime;
 const TimeSpec = os.linux.timespec;
 const ITimerSpec = os.linux.itimerspec;
 
-const signalFd  = os.signalfd;
-const sigProcMask = os.sigprocmask;
-const SigSet = os.sigset_t;
-const SIG = os.SIG;
+const signalFd  = std.posix.signalfd;
+const sigProcMask = std.posix.sigprocmask;
+const SigSet = std.posix.sigset_t;
+const SIG = std.posix.SIG;
 const SigInfo = os.linux.signalfd_siginfo;
 
 const edsm = @import("edsm.zig");
@@ -92,14 +92,14 @@ pub const EventSource = struct {
     }
 
     fn getServerSocketFd(port: u16) !i32 {
-        const fd = try os.socket(os.AF.INET, os.SOCK.STREAM, os.IPPROTO.TCP);
-        errdefer os.close(fd);
+        const fd = try std.posix.socket(std.posix.AF.INET, std.posix.SOCK.STREAM, std.posix.IPPROTO.TCP);
+        errdefer std.posix.close(fd);
         const yes = mem.toBytes(@as(c_int, 1));
-        try os.setsockopt(fd, os.SOL.SOCKET, os.SO.REUSEADDR, &yes);
+        try std.posix.setsockopt(fd, std.posix.SOL.SOCKET, std.posix.SO.REUSEADDR, &yes);
         const addr = net.Address.initIp4(.{0,0,0,0}, port);
-        var socklen = addr.getOsSockLen();
-        try os.bind(fd, &addr.any, socklen);
-        try os.listen(fd, 128);
+        const socklen = addr.getOsSockLen();
+        try std.posix.bind(fd, &addr.any, socklen);
+        try std.posix.listen(fd, 128);
         return fd;
     }
 
@@ -107,25 +107,25 @@ pub const EventSource = struct {
         if (self.kind != .io) unreachable;
         if (self.subkind != .ssock) unreachable;
         var addr: net.Address = undefined;
-        var alen: os.socklen_t = @sizeOf(net.Address);
-        return try os.accept(self.id, &addr.any, &alen, 0);
+        var alen: std.posix.socklen_t = @sizeOf(net.Address);
+        return try std.posix.accept(self.id, &addr.any, &alen, 0);
     }
 
     fn getClientSocketFd() !i32 {
-        return try os.socket(os.AF.INET, os.SOCK.STREAM, os.IPPROTO.TCP);
+        return try std.posix.socket(std.posix.AF.INET, std.posix.SOCK.STREAM, std.posix.IPPROTO.TCP);
     }
 
     pub fn startConnect(self: *Self, addr: *net.Address) !void {
-        const InProgress = os.ConnectError.WouldBlock;
+        const InProgress = std.posix.ConnectError.WouldBlock;
 
         if (self.kind != .io) unreachable;
         if (self.subkind != .csock) unreachable;
 
-        var flags = os.fcntl(self.id, os.F.GETFL, 0) catch unreachable;
-        flags |= os.O.NONBLOCK;
-        _ = os.fcntl(self.id, os.F.SETFL, flags) catch unreachable;
+        var flags = std.posix.fcntl(self.id, std.posix.F.GETFL, 0) catch unreachable;
+        flags |= std.posix.SOCK.NONBLOCK;
+        _ = std.posix.fcntl(self.id, std.posix.F.SETFL, flags) catch unreachable;
 
-        os.connect(self.id, &addr.any, addr.getOsSockLen()) catch |err| {
+        std.posix.connect(self.id, &addr.any, addr.getOsSockLen()) catch |err| {
             switch (err) {
                 InProgress => return,
                 else => return err,
@@ -142,7 +142,7 @@ pub const EventSource = struct {
     }
 
     fn getSignalId(signo: u6) !i32 {
-        var sset: SigSet = std.os.empty_sigset;
+        var sset: SigSet = std.posix.empty_sigset;
         // block the signal
         std.os.linux.sigaddset(&sset, signo);
         sigProcMask(SIG.BLOCK, &sset, null);
@@ -150,7 +150,7 @@ pub const EventSource = struct {
     }
 
     fn getTimerId() !i32 {
-        return try timerFd(std.os.CLOCK.REALTIME, 0);
+        return try timerFd(std.posix.CLOCK.REALTIME, .{});
     }
 
     /// obtain fd from OS
@@ -170,15 +170,15 @@ pub const EventSource = struct {
     fn setTimer(id: i32, msec: u32) !void {
         const its = ITimerSpec {
             .it_interval = TimeSpec {
-                .tv_sec = 0,
-                .tv_nsec = 0,
+                .sec = 0,
+                .nsec = 0,
             },
             .it_value = TimeSpec {
-                .tv_sec = msec / 1000,
-                .tv_nsec = (msec % 1000) * 1000 * 1000,
+                .sec = msec / 1000,
+                .nsec = (msec % 1000) * 1000 * 1000,
             },
         };
-        try timerFdSetTime(id, 0, &its, null);
+        try timerFdSetTime(id, .{}, &its, null);
     }
 
     pub fn enable(self: *Self, eq: *ecap.EventQueue, args: anytype) !void {
@@ -202,23 +202,23 @@ pub const EventSource = struct {
     }
 
     fn readTimerInfo(self: *Self) !void {
-        var p1 = switch (self.kind) {
+        const p1 = switch (self.kind) {
             .tm => &self.info.tm.nexp,
             else => unreachable,
         };
         var p2: [*]u8 = @ptrCast(@alignCast(p1));
         var buf = p2[0..@sizeOf(AboutTimer)];
-        _ = try std.os.read(self.id, buf[0..]);
+        _ = try std.posix.read(self.id, buf[0..]);
     }
 
     fn readSignalInfo(self: *Self) !void {
-        var p1 = switch (self.kind) {
+        const p1 = switch (self.kind) {
             .sg => &self.info.sg.sig_info,
             else => unreachable,
         };
         var p2: [*]u8 = @ptrCast(@alignCast(p1));
         var buf = p2[0..@sizeOf(SigInfo)];
-        _ = try std.os.read(self.id, buf[0..]);
+        _ = try std.posix.read(self.id, buf[0..]);
     }
 
     pub fn readInfo(self: *Self) !void {

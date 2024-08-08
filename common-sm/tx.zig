@@ -98,7 +98,7 @@ pub const TxPotBoy = struct {
 
     fn workD1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        var io = utils.opaqPtrTo(dptr, *EventSource);
+        const io = utils.opaqPtrTo(dptr, *EventSource);
         var pd = utils.opaqPtrTo(me.data, *TxData);
 
         if (0 == pd.ctx.cnt) {
@@ -108,7 +108,7 @@ pub const TxPotBoy = struct {
             return;
         } 
 
-        const bw = std.os.write(io.id, pd.ctx.buf[pd.ctx.buf.len - pd.ctx.cnt..pd.ctx.buf.len]) catch {
+        const bw = std.posix.write(io.id, pd.ctx.buf[pd.ctx.buf.len - pd.ctx.cnt..pd.ctx.buf.len]) catch {
             me.msgTo(me, M0_IDLE, null);
             me.msgTo(pd.customer, M2_FAIL, null);
             return;
@@ -127,7 +127,7 @@ pub const TxPotBoy = struct {
     fn workD2(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
         _ = dptr;
-        var pd = utils.opaqPtrTo(me.data, *TxData);
+        const pd = utils.opaqPtrTo(me.data, *TxData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.customer, M2_FAIL, null);
     }

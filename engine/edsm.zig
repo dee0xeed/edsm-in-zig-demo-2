@@ -104,7 +104,7 @@ pub const StageMachine = struct {
     }
 
     pub fn addStage(self: *Self, st: Stage) !void {
-        var ptr = try self.stages.addOne();
+        const ptr = try self.stages.addOne();
         ptr.* = st;
         ptr.*.sm = self;
     }

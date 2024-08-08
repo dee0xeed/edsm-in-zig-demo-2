@@ -1,5 +1,10 @@
 # echo-server and echo-client
 
+```
+/opt/zig-0.14/zig build-exe client.zig
+/opt/zig-0.14/zig build-exe server.zig
+```
+
 ## Preliminary notes
 
 First of all - this is **NOT** so called hierarchical state machines (nested states and whatnots)

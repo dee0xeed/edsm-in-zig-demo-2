@@ -50,8 +50,8 @@ pub const Terminator = struct {
 
     fn initEnter(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *TerminatorData);
-        me.initSignal(&pd.sg0, std.os.SIG.INT, Message.S0) catch unreachable;
-        me.initSignal(&pd.sg1, std.os.SIG.TERM, Message.S1) catch unreachable;
+        me.initSignal(&pd.sg0, std.posix.SIG.INT, Message.S0) catch unreachable;
+        me.initSignal(&pd.sg1, std.posix.SIG.TERM, Message.S1) catch unreachable;
         me.msgTo(me, M0_IDLE, null);
     }
 
@@ -63,8 +63,8 @@ pub const Terminator = struct {
 
     fn idleS0(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         _ = src;
-        var sg = utils.opaqPtrTo(dptr, *EventSource);
-        var si = sg.info.sg.sig_info;
+        const sg = utils.opaqPtrTo(dptr, *EventSource);
+        const si = sg.info.sg.sig_info;
         print("got signal #{} from PID {}\n", .{si.signo, si.pid});
         me.msgTo(null, Message.M0, null);
     }

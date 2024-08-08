@@ -20,7 +20,7 @@ pub const MachinePool = struct {
     }
 
     pub fn put(self: *Self, sm: *StageMachine) !void {
-        var p = try self.list.addOne();
+        const p = try self.list.addOne();
         p.* = sm;
     }
 

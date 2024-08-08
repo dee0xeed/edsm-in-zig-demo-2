@@ -108,7 +108,7 @@ pub const Worker = struct {
     // message from LISTENER (new client)
     fn idleM1(me: *StageMachine, src: ?*StageMachine, dptr: ?*anyopaque) void {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
-        var client = utils.opaqPtrTo(dptr, *Client);
+        const client = utils.opaqPtrTo(dptr, *Client);
         pd.listener = src;
         pd.client = client;
         pd.ctx.fd = client.fd;
@@ -124,7 +124,7 @@ pub const Worker = struct {
 
     fn recvEnter(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
-        var rx = pd.rx_pool.get() orelse {
+        const rx = pd.rx_pool.get() orelse {
             me.msgTo(me, M2_FAIL, null);
             return;
         };
@@ -137,7 +137,7 @@ pub const Worker = struct {
 
     // message from RX machine (success)
     fn recvM1(me: *StageMachine, src: ?*StageMachine, data: ?*anyopaque) void {
-        var pd = utils.opaqPtrTo(me.data, *WorkerData);
+        const pd = utils.opaqPtrTo(me.data, *WorkerData);
         _ = pd;
         _ = data;
         _ = src;
@@ -146,7 +146,7 @@ pub const Worker = struct {
 
     fn sendEnter(me: *StageMachine) void {
         var pd = utils.opaqPtrTo(me.data, *WorkerData);
-        var tx = pd.tx_pool.get() orelse {
+        const tx = pd.tx_pool.get() orelse {
             me.msgTo(me, M2_FAIL, null);
             return;
         };
@@ -162,7 +162,7 @@ pub const Worker = struct {
     }
 
     fn failEnter(me: *StageMachine) void {
-        var pd = utils.opaqPtrTo(me.data, *WorkerData);
+        const pd = utils.opaqPtrTo(me.data, *WorkerData);
         me.msgTo(me, M0_IDLE, null);
         me.msgTo(pd.listener, M0_GONE, pd.client);
     }
