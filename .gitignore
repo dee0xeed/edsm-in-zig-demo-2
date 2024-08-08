@@ -1,4 +1,2 @@
-*.o
-server
-client
-/zig-cache
+/zig-*
+/.zig-*

@@ -1,8 +1,8 @@
 # echo-server and echo-client
 
+To build:
 ```
-/opt/zig-0.14/zig build-exe client.zig
-/opt/zig-0.14/zig build-exe server.zig
+/opt/zig-0.14/zig build
 ```
 
 ## Preliminary notes
