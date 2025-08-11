@@ -1,8 +1,12 @@
 # echo-server and echo-client
 
 To build:
+
 ```
-/opt/zig-0.14/zig build
+/opt/zig-0.14.1/zig version
+0.14.1
+
+/opt/zig-0.14.1/zig build
 ```
 
 ## Preliminary notes
